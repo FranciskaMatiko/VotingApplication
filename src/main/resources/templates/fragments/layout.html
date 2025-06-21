@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8" />
+    <title th:text="${title}">Voting App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div th:fragment="layout(title, content)">
+    <div th:replace="~{fragments/layout :: head(${title})}"></div>
+    <div th:insert="${content}"></div>
+</div>
+</body>
+</html>
