@@ -308,7 +308,21 @@ public class AdminController {
     @GetMapping("/results")
     public String viewResults(Model model) {
         List<ElectionResult> electionResults = resultService.getAllElectionResults();
+        
+        // Add debugging information
+        List<Election> allElections = electionService.getAllElections();
+        System.out.println("Total elections found: " + allElections.size());
+        
+        for (Election election : allElections) {
+            election.calculateStatus();
+            System.out.println("Election: " + election.getName() + ", Status: " + election.getStatus());
+        }
+        
+        System.out.println("Election results size: " + electionResults.size());
+        
         model.addAttribute("electionResults", electionResults);
+        model.addAttribute("totalElections", allElections.size());
+        
         return "admin/results";
     }
     

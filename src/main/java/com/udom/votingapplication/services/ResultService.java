@@ -34,8 +34,11 @@ public class ResultService {
     }
 
     public ElectionResult getElectionResult(Election election) {
+        // Ensure status is calculated
+        election.calculateStatus();
+        
         long totalVotes = voteService.countVotesForElection(election.getId());
-        long totalCandidates = election.getCandidates().size();
+        long totalCandidates = election.getCandidates() != null ? election.getCandidates().size() : 0;
         long totalEligibleVoters = voterService.getAllVoters().size();
         
         ElectionResult result = new ElectionResult(

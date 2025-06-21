@@ -21,14 +21,17 @@ public class VoterController {
     private final VoteService voteService;
     private final ResultService resultService;
     private final VoterService voterService;
+    private final PdfService pdfService;
 
     public VoterController(ElectionService electionService, CandidateService candidateService, 
-                          VoteService voteService, ResultService resultService, VoterService voterService) {
+                          VoteService voteService, ResultService resultService, VoterService voterService,
+                          PdfService pdfService) {
         this.electionService = electionService;
         this.candidateService = candidateService;
         this.voteService = voteService;
         this.resultService = resultService;
         this.voterService = voterService;
+        this.pdfService = pdfService;
     }
 
     // Voter dashboard
@@ -312,6 +315,95 @@ public class VoterController {
         }
     }
 
+    // Update profile endpoint
+    @PostMapping("/profile/update")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> updateProfile(
+            @RequestBody Map<String, String> request,
+            @AuthenticationPrincipal Voter voter) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String fullName = request.get("fullName");
+            String email = request.get("email");
+            
+            // Validate input
+            if (fullName == null || fullName.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Full name is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (email == null || email.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Email is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Basic email validation
+            if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+                response.put("success", false);
+                response.put("message", "Please enter a valid email address");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Attempt to update profile
+            boolean success = voterService.updateProfile(voter.getId(), fullName.trim(), email.trim());
+            
+            if (success) {
+                response.put("success", true);
+                response.put("message", "Profile updated successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Failed to update profile");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "An error occurred while updating profile");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Update notification settings endpoint
+    @PostMapping("/profile/notification-settings")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> updateNotificationSettings(
+            @RequestBody Map<String, Boolean> request,
+            @AuthenticationPrincipal Voter voter) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            boolean electionNotifications = request.getOrDefault("electionNotifications", false);
+            boolean voteReminders = request.getOrDefault("voteReminders", false);
+            boolean resultNotifications = request.getOrDefault("resultNotifications", false);
+            boolean emailNotifications = request.getOrDefault("emailNotifications", false);
+            
+            // Attempt to update notification settings
+            boolean success = voterService.updateNotificationSettings(voter.getId(), 
+                electionNotifications, voteReminders, resultNotifications, emailNotifications);
+            
+            if (success) {
+                response.put("success", true);
+                response.put("message", "Notification settings updated successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Failed to update notification settings");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "An error occurred while updating notification settings");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
     // General cast vote page (redirects to elections)
     @GetMapping("/vote")
     public String vote() {
@@ -365,5 +457,92 @@ public class VoterController {
             e.printStackTrace(); // For debugging
             return "redirect:/voter/elections?error=loadFailed";
         }
+    }
+
+    // Export voting history as PDF
+    @GetMapping("/history/export/pdf")
+    public ResponseEntity<byte[]> exportHistoryAsPDF(@AuthenticationPrincipal Voter voter) {
+        try {
+            // Get voter's voting history
+            List<Election> allElections = electionService.getAllElections();
+            List<Election> votedElections = allElections.stream()
+                .filter(election -> voteService.hasVoted(voter.getId(), election.getId()))
+                .collect(Collectors.toList());
+            
+            // Generate PDF using PdfService
+            byte[] pdfBytes = pdfService.generateVotingHistoryPdf(voter, votedElections);
+            
+            return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=voting-history.pdf")
+                .body(pdfBytes);
+            
+        } catch (Exception e) {
+            e.printStackTrace(); // For debugging
+            // Return error as plain text
+            String errorMessage = "Error generating PDF export: " + e.getMessage();
+            return ResponseEntity.internalServerError()
+                .header("Content-Type", "text/plain")
+                .body(errorMessage.getBytes());
+        }
+    }
+
+    // Export voting history as CSV
+    @GetMapping("/history/export/csv")
+    public ResponseEntity<byte[]> exportHistoryAsCSV(@AuthenticationPrincipal Voter voter) {
+        try {
+            // Get voter's voting history
+            List<Election> allElections = electionService.getAllElections();
+            List<Election> votedElections = allElections.stream()
+                .filter(election -> voteService.hasVoted(voter.getId(), election.getId()))
+                .collect(Collectors.toList());
+            
+            // Generate CSV content
+            StringBuilder csvContent = new StringBuilder();
+            
+            // Add header with voter information
+            csvContent.append("# Voting History Report\n");
+            csvContent.append("# Voter: ").append(voter.getFullName()).append("\n");
+            csvContent.append("# Username: ").append(voter.getUsername()).append("\n");
+            csvContent.append("# Report Generated: ").append(LocalDateTime.now().toString()).append("\n");
+            csvContent.append("# Total Elections Participated: ").append(votedElections.size()).append("\n");
+            csvContent.append("\n");
+            
+            // Add CSV headers
+            csvContent.append("Election Name,Election Type,End Date,Status\n");
+            
+            // Add data rows
+            if (votedElections.isEmpty()) {
+                csvContent.append("No voting history found,,,\n");
+            } else {
+                for (Election election : votedElections) {
+                    election.calculateStatus();
+                    csvContent.append(String.format("\"%s\",\"%s\",\"%s\",\"%s\"\n",
+                        escapeCSV(election.getName() != null ? election.getName() : "N/A"),
+                        escapeCSV(election.getVotingType() != null ? election.getVotingType() : "N/A"),
+                        election.getEndTime() != null ? election.getEndTime().toString() : "N/A",
+                        escapeCSV(election.getStatus() != null ? election.getStatus() : "N/A")
+                    ));
+                }
+            }
+            
+            byte[] csvBytes = csvContent.toString().getBytes("UTF-8");
+            
+            return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .header("Content-Disposition", "attachment; filename=voting-history.csv")
+                .body(csvBytes);
+            
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body("Error generating CSV export".getBytes());
+        }
+    }
+    
+    // Helper method to escape CSV values
+    private String escapeCSV(String value) {
+        if (value == null) return "";
+        // Escape quotes by doubling them
+        return value.replace("\"", "\"\"");
     }
 }

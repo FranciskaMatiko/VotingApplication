@@ -97,9 +97,7 @@
             document.getElementById('headerFullName').textContent = newFullName;
             document.getElementById('sidebarFullName').textContent = newFullName;
             
-            // Here you would normally send the data to the server
-            // Example AJAX call (commented out for demo):
-            /*
+            // Send the data to the server
             fetch('/voter/profile/update', {
                 method: 'POST',
                 headers: {
@@ -118,15 +116,15 @@
                     toggleEditProfile();
                 } else {
                     showAlert('Error!', data.message || 'Failed to update profile', 'error');
+                    // Revert the display changes if server update failed
+                    location.reload(); // Simple way to revert changes
                 }
             })
             .catch(error => {
                 showAlert('Error!', 'Network error occurred', 'error');
+                // Revert the display changes if network error
+                location.reload(); // Simple way to revert changes
             });
-            */
-            
-            showAlert('Success!', 'Profile updated successfully!', 'success');
-            toggleEditProfile();
         }
 
         function changePassword() {
@@ -183,40 +181,36 @@
             const resultNotifications = document.getElementById('resultNotifications').checked;
             const emailNotifications = document.getElementById('emailNotifications').checked;
             
-            // Here you would normally save notification preferences to the server
-            console.log('Notification settings saved:', {
-                elections: electionNotifications,
-                reminders: voteReminders,
-                results: resultNotifications,
-                email: emailNotifications
+            // Send notification preferences to the server
+            fetch('/voter/profile/notification-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    electionNotifications: electionNotifications,
+                    voteReminders: voteReminders,
+                    resultNotifications: resultNotifications,
+                    emailNotifications: emailNotifications
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Success!', 'Notification settings saved successfully!', 'success');
+                    closeModal('notificationModal');
+                } else {
+                    showAlert('Error!', data.message || 'Failed to save notification settings', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Error!', 'Network error occurred', 'error');
             });
-            
-            showAlert('Success!', 'Notification settings saved successfully!', 'success');
-            closeModal('notificationModal');
         }
 
-        function savePrivacySettings() {
-            const profileVisibility = document.getElementById('profileVisibility').checked;
-            const historyVisibility = document.getElementById('historyVisibility').checked;
-            const dataAnalytics = document.getElementById('dataAnalytics').checked;
-            const twoFactorAuth = document.getElementById('twoFactorAuth').checked;
-            
-            // Here you would normally save privacy settings to the server
-            console.log('Privacy settings saved:', {
-                profileVisible: profileVisibility,
-                historyVisible: historyVisibility,
-                dataAnalytics: dataAnalytics,
-                twoFactorAuth: twoFactorAuth
-            });
-            
-            showAlert('Success!', 'Privacy settings updated successfully!', 'success');
-            closeModal('privacyModal');
-        }
 
-        function downloadData() {
-            // Here you would normally initiate the data download from the server
-            showAlert('Download Started!', 'Your data download will begin shortly. You will receive an email when it\'s ready.', 'success');
-        }
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -477,16 +471,6 @@
                         <i class="fas fa-bell text-blue-600 mr-3"></i>
                         <span class="font-medium text-gray-900">Notification Settings</span>
                     </button>
-                    
-                    <button onclick="openModal('privacyModal')" class="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <i class="fas fa-shield-alt text-green-600 mr-3"></i>
-                        <span class="font-medium text-gray-900">Privacy Settings</span>
-                    </button>
-                    
-                    <button onclick="downloadData()" class="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <i class="fas fa-download text-purple-600 mr-3"></i>
-                        <span class="font-medium text-gray-900">Download Data</span>
-                    </button>
                 </div>
             </div>
         </main>
@@ -591,73 +575,6 @@
                     Cancel
                 </button>
                 <button onclick="saveNotificationSettings()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    Save Settings
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Privacy Settings Modal -->
-    <div id="privacyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900">Privacy Settings</h3>
-                <button onclick="closeModal('privacyModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 class="font-medium text-gray-900">Profile Visibility</h4>
-                        <p class="text-sm text-gray-500">Make your profile visible to other users</p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="profileVisibility" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 class="font-medium text-gray-900">Voting History Visibility</h4>
-                        <p class="text-sm text-gray-500">Allow others to see your voting participation</p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="historyVisibility" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 class="font-medium text-gray-900">Data Analytics</h4>
-                        <p class="text-sm text-gray-500">Allow use of anonymized data for analytics</p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="dataAnalytics" class="sr-only peer" checked>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 class="font-medium text-gray-900">Two-Factor Authentication</h4>
-                        <p class="text-sm text-gray-500">Enable 2FA for additional security</p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="twoFactorAuth" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-3 pt-6">
-                <button onclick="closeModal('privacyModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
-                    Cancel
-                </button>
-                <button onclick="savePrivacySettings()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                     Save Settings
                 </button>
             </div>

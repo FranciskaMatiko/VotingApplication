@@ -49,18 +49,25 @@
             const completedElections = document.querySelectorAll('[data-status="completed"]').length;
             const activeElections = document.querySelectorAll('[data-status="active"]').length;
             const upcomingElections = document.querySelectorAll('[data-status="upcoming"]').length;
+            
+            // If no data, show a placeholder chart
+            const hasData = completedElections + activeElections + upcomingElections > 0;
+            
+            const data = hasData ? 
+                [completedElections, activeElections, upcomingElections] : 
+                [1, 1, 1]; // Placeholder data
+                
+            const colors = hasData ? 
+                ['#10B981', '#3B82F6', '#F59E0B'] : 
+                ['#E5E7EB', '#E5E7EB', '#E5E7EB']; // Gray colors for no data
 
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Completed', 'Active', 'Upcoming'],
+                    labels: hasData ? ['Completed', 'Active', 'Upcoming'] : ['No Data', '', ''],
                     datasets: [{
-                        data: [completedElections, activeElections, upcomingElections],
-                        backgroundColor: [
-                            '#10B981', // Green for completed
-                            '#3B82F6', // Blue for active
-                            '#F59E0B'  // Yellow for upcoming
-                        ],
+                        data: data,
+                        backgroundColor: colors,
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -73,12 +80,28 @@
                             position: 'bottom',
                             labels: {
                                 padding: 20,
-                                usePointStyle: true
+                                usePointStyle: true,
+                                filter: function(legendItem, chartData) {
+                                    // Hide empty labels when no data
+                                    return hasData || legendItem.text === 'No Data';
+                                }
                             }
+                        },
+                        tooltip: {
+                            enabled: hasData
                         }
                     }
                 }
             });
+            
+            // Add text overlay for no data
+            if (!hasData) {
+                const chartContainer = ctx.parentElement;
+                const noDataDiv = document.createElement('div');
+                noDataDiv.className = 'absolute inset-0 flex items-center justify-center';
+                noDataDiv.innerHTML = '<p class="text-gray-500 text-sm">No Elections Found</p>';
+                chartContainer.appendChild(noDataDiv);
+            }
         }
     </script>
 </head>
@@ -174,10 +197,21 @@
 
         <!-- Header -->
         <div class="bg-white shadow-sm border-b px-6 py-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Election Results</h1>
                     <p class="text-gray-600 mt-1">View detailed results and statistics for all elections</p>
+                </div>
+                <!-- Inline Filter -->
+                <div class="flex items-center space-x-3">
+                    <label for="statusFilter" class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by status:</label>
+                    <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white min-w-[140px]"
+                            onchange="filterResults()">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="active">Active</option>
+                        <option value="upcoming">Upcoming</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -186,81 +220,100 @@
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- Total Elections -->
-                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500 hover:shadow-xl transition-shadow duration-300 group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Total Elections</p>
-                            <p class="text-3xl font-bold text-indigo-600" th:text="${#lists.size(electionResults)}">0</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Total Elections</p>
+                            <p class="text-3xl font-bold text-indigo-600 group-hover:text-indigo-700 transition-colors" th:text="${#lists.size(electionResults)}">0</p>
+                            <p class="text-xs text-gray-500 mt-1">All elections in system</p>
                         </div>
-                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
                             <i class="fas fa-vote-yea text-indigo-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
 
                 <!-- Completed Elections -->
-                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300 group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Completed</p>
-                            <p class="text-3xl font-bold text-green-600" th:text="${#lists.size(electionResults.?[status == 'completed'])}">0</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Completed</p>
+                            <p class="text-3xl font-bold text-green-600 group-hover:text-green-700 transition-colors" th:text="${#lists.size(electionResults.?[status == 'completed'])}">0</p>
+                            <p class="text-xs text-gray-500 mt-1">Finished elections</p>
                         </div>
-                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors">
                             <i class="fas fa-check-circle text-green-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
 
                 <!-- Active Elections -->
-                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow duration-300 group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Active</p>
-                            <p class="text-3xl font-bold text-blue-600" th:text="${#lists.size(electionResults.?[status == 'active'])}">0</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Active</p>
+                            <p class="text-3xl font-bold text-blue-600 group-hover:text-blue-700 transition-colors" th:text="${#lists.size(electionResults.?[status == 'active'])}">0</p>
+                            <p class="text-xs text-gray-500 mt-1">Currently running</p>
                         </div>
-                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                             <i class="fas fa-play text-blue-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
 
                 <!-- Total Votes -->
-                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300 group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Total Votes</p>
-                            <p class="text-3xl font-bold text-purple-600" th:text="${#aggregates.sum(electionResults.![totalVotes])}">0</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Total Votes</p>
+                            <p class="text-3xl font-bold text-purple-600 group-hover:text-purple-700 transition-colors" th:text="${#aggregates.sum(electionResults.![totalVotes])}">0</p>
+                            <p class="text-xs text-gray-500 mt-1">Across all elections</p>
                         </div>
-                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                             <i class="fas fa-chart-bar text-purple-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Overview Chart and Filter -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Chart -->
-                <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Election Status Overview</h3>
+            <!-- Overview Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Election Status Overview</h3>
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Distribution of elections by current status
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <!-- Chart Section -->
                     <div class="relative h-64">
                         <canvas id="overviewChart"></canvas>
                     </div>
-                </div>
-
-                <!-- Filter -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter Results</h3>
+                    <!-- Legend and Summary -->
                     <div class="space-y-4">
-                        <div>
-                            <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    onchange="filterResults()">
-                                <option value="">All Statuses</option>
-                                <option value="completed">Completed</option>
-                                <option value="active">Active</option>
-                                <option value="upcoming">Upcoming</option>
-                            </select>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
+                            <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                                <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Completed</p>
+                                    <p class="text-lg font-bold text-green-600" th:text="${#lists.size(electionResults.?[status == 'completed'])}">0</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Active</p>
+                                    <p class="text-lg font-bold text-blue-600" th:text="${#lists.size(electionResults.?[status == 'active'])}">0</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                                <div class="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Upcoming</p>
+                                    <p class="text-lg font-bold text-yellow-600" th:text="${#lists.size(electionResults.?[status == 'upcoming'])}">0</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -268,33 +321,91 @@
 
             <!-- Election Results List -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-                    <h2 class="text-xl font-semibold text-white flex items-center">
-                        <i class="fas fa-chart-bar mr-3"></i>
-                        Election Results
-                    </h2>
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Election Results
+                        </h2>
+                        <div class="text-indigo-100 text-sm">
+                            <span th:text="${#lists.size(electionResults)}">0</span> results found
+                        </div>
+                    </div>
                 </div>
 
-                <div th:if="${#lists.isEmpty(electionResults)}" class="text-center py-16">
-                    <i class="fas fa-chart-bar text-6xl text-gray-300 mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-500 mb-2">No Results Available</h3>
-                    <p class="text-gray-400 mb-6">Results will appear here once elections are completed.</p>
+                <div th:if="${#lists.isEmpty(electionResults)}" class="text-center py-20">
+                    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-bar text-4xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">No Election Results Available</h3>
+                    <p class="text-gray-500 mb-8 max-w-md mx-auto">Results will appear here once elections are completed and votes are tallied.</p>
+                    
+                    <div th:if="${totalElections != null && totalElections > 0}" class="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md mx-auto">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                            <span class="text-blue-800 font-medium">System Status</span>
+                        </div>
+                        <p class="text-blue-700 text-sm mb-3">Found <span class="font-semibold" th:text="${totalElections}">0</span> elections in the system.</p>
+                        <ul class="text-blue-600 text-sm space-y-1 list-disc list-inside">
+                            <li>Ensure elections have candidates assigned</li>
+                            <li>Check that voting periods are properly configured</li>
+                            <li>Verify that votes have been cast</li>
+                        </ul>
+                    </div>
+                    
+                    <div th:if="${totalElections == null || totalElections == 0}" class="bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-md mx-auto">
+                        <p class="text-gray-600 mb-4">No elections found in the system.</p>
+                        <a href="/admin/elections/new" class="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
+                            <i class="fas fa-plus mr-2"></i>
+                            Create Your First Election
+                        </a>
+                    </div>
                 </div>
 
                 <div th:if="${!#lists.isEmpty(electionResults)}" class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-indigo-500">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Election</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participation</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Votes</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Winner</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-vote-yea mr-2 text-indigo-500"></i>
+                                        Election
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-circle mr-2 text-indigo-500"></i>
+                                        Status
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-users mr-2 text-indigo-500"></i>
+                                        Participation
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>
+                                        Votes
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-crown mr-2 text-indigo-500"></i>
+                                        Winner
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-cog mr-2 text-indigo-500"></i>
+                                        Actions
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr th:each="result : ${electionResults}" class="result-row hover:bg-gray-50 transition-colors duration-200"
+                        <tbody class="bg-white divide-y divide-gray-100">
+                            <tr th:each="result : ${electionResults}" class="result-row hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 border-l-4 border-transparent hover:border-indigo-500"
                                 th:attr="data-status=${result.status}">
                                 <!-- Election Details -->
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -373,14 +484,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
                                         <a th:href="@{/admin/results/{id}(id=${result.electionId})}" 
-                                           class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors duration-200 text-sm">
-                                            <i class="fas fa-chart-line mr-1"></i>
+                                           class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md">
+                                            <i class="fas fa-chart-line mr-2"></i>
                                             View Details
                                         </a>
                                         <a th:if="${result.status == 'completed' && result.totalVotes > 0}"
                                            th:href="@{/admin/results/{id}/export(id=${result.electionId})}" 
-                                           class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-200 text-sm">
-                                            <i class="fas fa-download mr-1"></i>
+                                           class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow-md">
+                                            <i class="fas fa-download mr-2"></i>
                                             Export
                                         </a>
                                     </div>
