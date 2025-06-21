@@ -47,9 +47,9 @@ public class DataInitializer implements CommandLineRunner {
         studentCouncil = electionRepository.save(studentCouncil);
         
         // Add candidates for Student Council
-        createCandidate("Alice Johnson", "Computer Science student with 3 years experience in student government. Focused on improving campus facilities and student services.", studentCouncil);
-        createCandidate("Bob Martinez", "Business Administration major passionate about student rights and academic excellence. Plans to enhance study spaces and library resources.", studentCouncil);
-        createCandidate("Carol Kim", "Engineering student advocating for better technology infrastructure and sustainable campus initiatives.", studentCouncil);
+        createCandidate("Alice Johnson", "Computer Science student with 3 years experience in student government. Focused on improving campus facilities and student services.", "Progressive Party", "President", studentCouncil);
+        createCandidate("Bob Martinez", "Business Administration major passionate about student rights and academic excellence. Plans to enhance study spaces and library resources.", "Student Union", "Vice President", studentCouncil);
+        createCandidate("Carol Kim", "Engineering student advocating for better technology infrastructure and sustainable campus initiatives.", "Green Campus", "Secretary", studentCouncil);
         
         // Create Faculty Representative Election
         Election facultyRep = new Election();
@@ -61,8 +61,8 @@ public class DataInitializer implements CommandLineRunner {
         facultyRep = electionRepository.save(facultyRep);
         
         // Add candidates for Faculty Representative
-        createCandidate("David Chen", "Graduate student in Education with experience in academic committee work. Committed to bridging student-faculty communication.", facultyRep);
-        createCandidate("Emma Wilson", "Psychology major with strong advocacy skills. Focused on mental health resources and academic support systems.", facultyRep);
+        createCandidate("David Chen", "Graduate student in Education with experience in academic committee work. Committed to bridging student-faculty communication.", "Academic Alliance", "Representative", facultyRep);
+        createCandidate("Emma Wilson", "Psychology major with strong advocacy skills. Focused on mental health resources and academic support systems.", "Student Wellness", "Representative", facultyRep);
         
         // Create Completed Election (Club President)
         Election clubPresident = new Election();
@@ -74,16 +74,18 @@ public class DataInitializer implements CommandLineRunner {
         clubPresident = electionRepository.save(clubPresident);
         
         // Add candidates for Club President
-        createCandidate("Frank Rodriguez", "Senior CS student with programming competition experience. Plans to organize more coding workshops and industry networking events.", clubPresident);
-        createCandidate("Grace Taylor", "Junior CS student focused on diversity and inclusion in tech. Aims to create mentorship programs for underrepresented students.", clubPresident);
+        createCandidate("Frank Rodriguez", "Senior CS student with programming competition experience. Plans to organize more coding workshops and industry networking events.", "Tech Innovation", "President", clubPresident);
+        createCandidate("Grace Taylor", "Junior CS student focused on diversity and inclusion in tech. Aims to create mentorship programs for underrepresented students.", "Inclusive Tech", "President", clubPresident);
         
         System.out.println("Sample elections and candidates initialized successfully!");
     }
     
-    private void createCandidate(String name, String profile, Election election) {
+    private void createCandidate(String name, String profile, String party, String position, Election election) {
         Candidate candidate = new Candidate();
         candidate.setName(name);
         candidate.setProfile(profile);
+        candidate.setParty(party);
+        candidate.setPosition(position);
         candidate.setElection(election);
         candidateRepository.save(candidate);
     }

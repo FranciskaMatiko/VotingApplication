@@ -45,6 +45,8 @@ public class AdminController {
     @GetMapping("/elections")
     public String manageElections(Model model) {
         List<Election> elections = electionService.getAllElections();
+        // Calculate status for each election
+        elections.forEach(Election::calculateStatus);
         model.addAttribute("elections", elections);
         return "admin/elections";
     }
@@ -86,10 +88,58 @@ public class AdminController {
     public String viewElection(@PathVariable Long id, Model model) {
         Election election = electionService.getElection(id)
             .orElseThrow(() -> new RuntimeException("Election not found"));
+        election.calculateStatus(); // Calculate status for UI
         List<Candidate> candidates = candidateService.getCandidatesByElection(election);
         model.addAttribute("election", election);
         model.addAttribute("candidates", candidates);
         return "admin/election-detail";
+    }
+
+    // Manage Candidates
+    @GetMapping("/candidates")
+    public String manageCandidates(Model model) {
+        List<Candidate> candidates = candidateService.getAllCandidates();
+        List<Election> elections = electionService.getAllElections();
+        model.addAttribute("candidates", candidates);
+        model.addAttribute("elections", elections);
+        return "admin/candidates";
+    }
+
+    @GetMapping("/candidates/new")
+    public String newCandidate(Model model) {
+        List<Election> elections = electionService.getAllElections();
+        model.addAttribute("candidate", new Candidate());
+        model.addAttribute("elections", elections);
+        return "admin/candidate-form";
+    }
+
+    @PostMapping("/candidates")
+    public String createCandidate(@ModelAttribute Candidate candidate) {
+        candidateService.saveCandidate(candidate);
+        return "redirect:/admin/candidates?success";
+    }
+
+    @GetMapping("/candidates/{id}/edit")
+    public String editCandidate(@PathVariable Long id, Model model) {
+        Candidate candidate = candidateService.getCandidate(id)
+            .orElseThrow(() -> new RuntimeException("Candidate not found"));
+        List<Election> elections = electionService.getAllElections();
+        model.addAttribute("candidate", candidate);
+        model.addAttribute("elections", elections);
+        return "admin/candidate-form";
+    }
+
+    @PostMapping("/candidates/{id}")
+    public String updateCandidate(@PathVariable Long id, @ModelAttribute Candidate candidate) {
+        candidate.setId(id);
+        candidateService.saveCandidate(candidate);
+        return "redirect:/admin/candidates?updated";
+    }
+
+    @PostMapping("/candidates/{id}/delete")
+    public String deleteCandidate(@PathVariable Long id) {
+        candidateService.deleteCandidate(id);
+        return "redirect:/admin/candidates?deleted";
     }
 
     // Manage Voters

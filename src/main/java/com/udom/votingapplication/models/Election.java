@@ -14,6 +14,7 @@ public class Election {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private boolean resultsVisible;
+    private String votingType = "single"; // single or multiple
 
     @OneToMany(mappedBy = "election")
     private List<Candidate> candidates;
@@ -21,6 +22,9 @@ public class Election {
     // Add transient field for UI purposes
     @Transient
     private boolean voterHasVoted;
+    
+    @Transient
+    private String status;
 
     public Long getId() {
         return id;
@@ -80,4 +84,31 @@ public class Election {
 
     public boolean isVoterHasVoted() { return voterHasVoted; }
     public void setVoterHasVoted(boolean voterHasVoted) { this.voterHasVoted = voterHasVoted; }
+
+    public String getVotingType() {
+        return votingType;
+    }
+
+    public void setVotingType(String votingType) {
+        this.votingType = votingType;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public void calculateStatus() {
+        LocalDateTime now = LocalDateTime.now();
+        if (endTime.isBefore(now)) {
+            this.status = "completed";
+        } else if (startTime.isAfter(now)) {
+            this.status = "upcoming";
+        } else {
+            this.status = "active";
+        }
+    }
 }

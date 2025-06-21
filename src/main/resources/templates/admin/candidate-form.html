@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${candidate.id != null ? 'Edit Candidate' : 'Add New Candidate'} + ' - Admin Panel'">Add Candidate - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function validateForm() {
+            const name = document.getElementById('name').value.trim();
+            const election = document.getElementById('election').value;
+            const position = document.getElementById('position').value.trim();
+            
+            if (!name) {
+                alert('Please enter candidate name');
+                return false;
+            }
+            
+            if (!election) {
+                alert('Please select an election');
+                return false;
+            }
+            
+            if (!position) {
+                alert('Please enter position');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Character counter for biography
+        document.addEventListener('DOMContentLoaded', function() {
+            const bioTextarea = document.getElementById('biography');
+            const charCounter = document.getElementById('charCounter');
+            
+            if (bioTextarea && charCounter) {
+                bioTextarea.addEventListener('input', function() {
+                    const length = this.value.length;
+                    charCounter.textContent = `${length}/500 characters`;
+                    
+                    if (length > 450) {
+                        charCounter.className = 'text-red-500 text-sm';
+                    } else if (length > 400) {
+                        charCounter.className = 'text-yellow-500 text-sm';
+                    } else {
+                        charCounter.className = 'text-gray-500 text-sm';
+                    }
+                });
+                
+                // Trigger initial count
+                bioTextarea.dispatchEvent(new Event('input'));
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Admin Panel</h2>
+                    <p class="text-xs text-indigo-300">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">Admin User</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/admin" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-pie text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/elections" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-vote-yea text-lg"></i>
+                        <span class="font-medium">Manage Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/candidates" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-colors duration-200">
+                        <i class="fas fa-users text-lg"></i>
+                        <span class="font-medium">Manage Candidates</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/voters" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-user-friends text-lg"></i>
+                        <span class="font-medium">Manage Voters</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">View Results</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-white shadow-sm border-b p-4 flex items-center justify-between">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800" th:text="${candidate.id != null ? 'Edit Candidate' : 'Add Candidate'}">Add Candidate</h1>
+            <div class="w-6"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900" th:text="${candidate.id != null ? 'Edit Candidate' : 'Add New Candidate'}">Add New Candidate</h1>
+                    <p class="text-gray-600 mt-1" th:text="${candidate.id != null ? 'Update candidate information and details' : 'Add a new candidate to participate in elections'}">Add a new candidate to participate in elections</p>
+                </div>
+                <a href="/admin/candidates" class="text-gray-600 hover:text-gray-900 font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Candidates
+                </a>
+            </div>
+        </div>
+
+        <!-- Candidate Form -->
+        <div class="p-6">
+            <div class="max-w-4xl mx-auto">
+                <form th:action="${candidate.id != null ? '/admin/candidates/' + candidate.id : '/admin/candidates'}" th:object="${candidate}" method="post" onsubmit="return validateForm()" class="bg-white rounded-xl shadow-lg p-8">
+                    
+                    <!-- Basic Information -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-user text-indigo-600 mr-3"></i>
+                            Candidate Information
+                        </h2>
+                        
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- Candidate Name -->
+                                <div>
+                                    <div class="relative">
+                                        <label for="name" class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                            <i class="fas fa-id-card text-indigo-600 mr-2"></i>
+                                            Full Name <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" id="name" th:field="*{name}" required
+                                               class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white shadow-sm"
+                                               placeholder="Enter candidate's full name">
+                                        <i class="fas fa-user absolute left-4 top-11 text-gray-400"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Party -->
+                                <div>
+                                    <div class="relative">
+                                        <label for="party" class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                            <i class="fas fa-flag text-indigo-600 mr-2"></i>
+                                            Party/Affiliation
+                                        </label>
+                                        <input type="text" id="party" th:field="*{party}"
+                                               class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white shadow-sm"
+                                               placeholder="Political party or independent">
+                                        <i class="fas fa-flag absolute left-4 top-11 text-gray-400"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Position -->
+                                <div>
+                                    <div class="relative">
+                                        <label for="position" class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                            <i class="fas fa-briefcase text-indigo-600 mr-2"></i>
+                                            Position <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" id="position" th:field="*{position}" required
+                                               class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white shadow-sm"
+                                               placeholder="Position running for (e.g., President, Secretary)">
+                                        <i class="fas fa-crown absolute left-4 top-11 text-gray-400"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Election -->
+                                <div>
+                                    <div class="relative">
+                                        <label for="election" class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                            <i class="fas fa-vote-yea text-indigo-600 mr-2"></i>
+                                            Election <span class="text-red-500">*</span>
+                                        </label>
+                                        <select id="election" th:field="*{election}" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white shadow-sm appearance-none">
+                                            <option value="">Select an election</option>
+                                            <option th:each="election : ${elections}" th:value="${election.id}" th:text="${election.name}">Election Name</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-4 top-11 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Biography -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-file-alt text-indigo-600 mr-3"></i>
+                            Biography & Platform
+                        </h2>
+                        
+                        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+                            <div class="relative">
+                                <label for="biography" class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                    <i class="fas fa-scroll text-green-600 mr-2"></i>
+                                    Biography & Platform
+                                </label>
+                                <textarea id="biography" th:field="*{profile}" rows="6" maxlength="500"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white shadow-sm resize-none"
+                                          placeholder="Describe the candidate's background, qualifications, and platform. What are their goals and vision if elected?"></textarea>
+                                <p id="charCounter" class="text-sm text-gray-500 mt-2">0/500 characters</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                        <a href="/admin/candidates" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                        
+                        <div class="flex items-center space-x-4">
+                            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <i th:class="${candidate.id != null ? 'fas fa-save' : 'fas fa-plus'}" class="mr-2"></i>
+                                <span th:text="${candidate.id != null ? 'Update Candidate' : 'Add Candidate'}">Add Candidate</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Help Info -->
+                <div th:if="${candidate.id == null}" class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-lightbulb text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-2">Tips for Adding Candidates</h3>
+                            <ul class="text-blue-800 space-y-1">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    Ensure the candidate is eligible for the selected election
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    Provide accurate and complete information
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    Write a compelling biography to help voters make informed decisions
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    Double-check all details before submitting
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

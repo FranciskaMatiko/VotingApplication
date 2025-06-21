@@ -170,13 +170,17 @@
                     <!-- Election Status Badge -->
                     <div class="relative">
                         <div class="absolute top-4 right-4 z-10">
-                            <span th:if="${election.endTime.isAfter(T(java.time.LocalDateTime).now())}" 
+                            <span th:if="${election.status == 'active'}" 
                                   class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                                 Active
                             </span>
-                            <span th:if="${election.endTime.isBefore(T(java.time.LocalDateTime).now())}" 
+                            <span th:if="${election.status == 'completed'}" 
                                   class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                                 Completed
+                            </span>
+                            <span th:if="${election.status == 'upcoming'}" 
+                                  class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                                Upcoming
                             </span>
                         </div>
                         <div class="h-32 bg-gradient-to-r from-blue-500 to-purple-600"></div>
@@ -211,8 +215,9 @@
                             </div>
                             <div class="flex items-center text-sm text-gray-500">
                                 <i class="fas fa-clock mr-2 text-orange-500"></i>
-                                <span th:if="${election.endTime.isAfter(T(java.time.LocalDateTime).now())}" class="text-green-600 font-medium">Active</span>
-                                <span th:if="${election.endTime.isBefore(T(java.time.LocalDateTime).now())}" class="text-gray-600">Ended</span>
+                                <span th:if="${election.status == 'active'}" class="text-green-600 font-medium">Active</span>
+                                <span th:if="${election.status == 'upcoming'}" class="text-blue-600 font-medium">Upcoming</span>
+                                <span th:if="${election.status == 'completed'}" class="text-gray-600">Ended</span>
                             </div>
                         </div>
 
@@ -223,13 +228,13 @@
                                 <i class="fas fa-eye mr-1"></i>
                                 View Candidates
                             </a>
-                            <a th:if="${election.endTime.isAfter(T(java.time.LocalDateTime).now())}" 
+                            <a th:if="${election.status == 'active'}" 
                                th:href="@{/voter/elections/{id}/vote(id=${election.id})}" 
                                class="flex-1 bg-indigo-600 text-white text-center py-2 px-4 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
                                 <i class="fas fa-check-circle mr-1"></i>
                                 Vote Now
                             </a>
-                            <a th:if="${election.endTime.isBefore(T(java.time.LocalDateTime).now()) && election.resultsVisible}" 
+                            <a th:if="${election.status == 'completed' && election.resultsVisible}" 
                                th:href="@{/voter/elections/{id}/results(id=${election.id})}" 
                                class="flex-1 bg-purple-600 text-white text-center py-2 px-4 rounded-lg hover:bg-purple-700 transition text-sm font-medium">
                                 <i class="fas fa-chart-bar mr-1"></i>

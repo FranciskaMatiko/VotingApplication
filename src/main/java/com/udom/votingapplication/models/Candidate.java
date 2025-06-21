@@ -9,6 +9,8 @@ public class Candidate {
     private Long id;
     private String name;
     private String profile;
+    private String party;
+    private String position;
 
     @ManyToOne
     @JoinColumn(name = "election_id")
@@ -21,6 +23,10 @@ public class Candidate {
     public void setName(String name) { this.name = name; }
     public String getProfile() { return profile; }
     public void setProfile(String profile) { this.profile = profile; }
+    public String getParty() { return party; }
+    public void setParty(String party) { this.party = party; }
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
     public Election getElection() { return election; }
     public void setElection(Election election) { this.election = election; }
 }

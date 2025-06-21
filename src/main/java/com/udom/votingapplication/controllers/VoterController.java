@@ -42,10 +42,11 @@ public class VoterController {
     public String elections(Model model, @AuthenticationPrincipal Voter voter) {
         List<Election> elections = electionService.getAllElections();
         
-        // Add voting status for each election
+        // Add voting status and status for each election
         for (Election election : elections) {
             boolean hasVoted = voteService.hasVoted(voter.getId(), election.getId());
             election.setVoterHasVoted(hasVoted);
+            election.calculateStatus(); // Calculate status for UI
         }
         
         model.addAttribute("elections", elections);

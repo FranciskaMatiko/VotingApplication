@@ -131,15 +131,15 @@
                     <div class="flex items-center justify-between">
                         <!-- Status -->
                         <div class="flex items-center space-x-4">
-                            <div th:if="${election.endTime.isBefore(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            <div th:if="${election.status == 'completed'}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                                 <i class="fas fa-check-circle mr-2"></i>
                                 Completed
                             </div>
-                            <div th:if="${election.startTime.isAfter(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            <div th:if="${election.status == 'upcoming'}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                                 <i class="fas fa-clock mr-2"></i>
                                 Upcoming
                             </div>
-                            <div th:if="${election.startTime.isBefore(T(java.time.LocalDateTime).now()) && election.endTime.isAfter(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <div th:if="${election.status == 'active'}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 <i class="fas fa-play mr-2"></i>
                                 Active
                             </div>
@@ -300,8 +300,8 @@
                                     </div>
                                 </div>
                                 <div class="flex items-start space-x-3">
-                                    <div th:if="${election.startTime.isAfter(T(java.time.LocalDateTime).now())}" class="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                                    <div th:if="${election.startTime.isBefore(T(java.time.LocalDateTime).now())}" class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                    <div th:if="${election.status == 'upcoming'}" class="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                                    <div th:if="${election.status == 'active' || election.status == 'completed'}" class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">Voting Period</p>
                                         <p class="text-xs text-gray-500" th:text="${#temporals.format(election.startTime, 'MMM dd')} + ' - ' + ${#temporals.format(election.endTime, 'MMM dd')}">Voting dates</p>
