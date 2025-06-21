@@ -144,9 +144,129 @@ public class AdminController {
 
     // Manage Voters
     @GetMapping("/voters")
-    public String manageVoters(Model model) {
-        // Implementation for voter management
+    public String manageVoters(Model model, @RequestParam(required = false) String search) {
+        List<Voter> voters;
+        if (search != null && !search.trim().isEmpty()) {
+            voters = voterService.searchVoters(search);
+        } else {
+            voters = voterService.getAllVoters();
+        }
+        model.addAttribute("voters", voters);
+        model.addAttribute("searchQuery", search);
         return "admin/voters";
+    }
+
+    @GetMapping("/voters/new")
+    public String createVoter(Model model) {
+        model.addAttribute("voter", new Voter());
+        model.addAttribute("isEdit", false);
+        return "admin/voter-form";
+    }
+
+    @PostMapping("/voters")
+    public String saveVoter(@ModelAttribute Voter voter, Model model) {
+        try {
+            // Check if username already exists
+            if (voterService.existsByUsername(voter.getUsername())) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", false);
+                model.addAttribute("error", "Username already exists");
+                return "admin/voter-form";
+            }
+            
+            // Validate required fields
+            if (voter.getUsername() == null || voter.getUsername().trim().isEmpty()) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", false);
+                model.addAttribute("error", "Username is required");
+                return "admin/voter-form";
+            }
+            
+            if (voter.getFullName() == null || voter.getFullName().trim().isEmpty()) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", false);
+                model.addAttribute("error", "Full name is required");
+                return "admin/voter-form";
+            }
+            
+            if (voter.getPassword() == null || voter.getPassword().trim().isEmpty()) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", false);
+                model.addAttribute("error", "Password is required");
+                return "admin/voter-form";
+            }
+            
+            voterService.saveVoter(voter);
+            return "redirect:/admin/voters?success";
+        } catch (Exception e) {
+            model.addAttribute("voter", voter);
+            model.addAttribute("isEdit", false);
+            model.addAttribute("error", "Error saving voter: " + e.getMessage());
+            return "admin/voter-form";
+        }
+    }
+
+    @GetMapping("/voters/{id}/edit")
+    public String editVoter(@PathVariable Long id, Model model) {
+        Voter voter = voterService.getVoter(id)
+            .orElseThrow(() -> new RuntimeException("Voter not found"));
+        model.addAttribute("voter", voter);
+        model.addAttribute("isEdit", true);
+        return "admin/voter-form";
+    }
+
+    @PostMapping("/voters/{id}")
+    public String updateVoter(@PathVariable Long id, @ModelAttribute Voter voter, Model model) {
+        try {
+            // Get existing voter
+            Voter existingVoter = voterService.getVoter(id)
+                .orElseThrow(() -> new RuntimeException("Voter not found"));
+            
+            // Check if username is being changed and if it already exists
+            if (!existingVoter.getUsername().equals(voter.getUsername()) && 
+                voterService.existsByUsername(voter.getUsername())) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", true);
+                model.addAttribute("error", "Username already exists");
+                return "admin/voter-form";
+            }
+            
+            // Validate required fields
+            if (voter.getUsername() == null || voter.getUsername().trim().isEmpty()) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", true);
+                model.addAttribute("error", "Username is required");
+                return "admin/voter-form";
+            }
+            
+            if (voter.getFullName() == null || voter.getFullName().trim().isEmpty()) {
+                model.addAttribute("voter", voter);
+                model.addAttribute("isEdit", true);
+                model.addAttribute("error", "Full name is required");
+                return "admin/voter-form";
+            }
+            
+            voter.setId(id);
+            
+            // If password is empty, keep the existing password
+            if (voter.getPassword() == null || voter.getPassword().trim().isEmpty()) {
+                voter.setPassword(existingVoter.getPassword());
+            }
+            
+            voterService.saveVoter(voter);
+            return "redirect:/admin/voters?updated";
+        } catch (Exception e) {
+            model.addAttribute("voter", voter);
+            model.addAttribute("isEdit", true);
+            model.addAttribute("error", "Error updating voter: " + e.getMessage());
+            return "admin/voter-form";
+        }
+    }
+
+    @PostMapping("/voters/{id}/delete")
+    public String deleteVoter(@PathVariable Long id) {
+        voterService.deleteVoter(id);
+        return "redirect:/admin/voters?deleted";
     }
 
     // View Results

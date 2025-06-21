@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Voters - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        let deleteVoterId = null;
+        let deleteVoterName = null;
+
+        function showDeleteConfirmation(voterId, voterName) {
+            deleteVoterId = voterId;
+            deleteVoterName = voterName;
+            document.getElementById('deleteVoterName').textContent = voterName;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteVoterId = null;
+            deleteVoterName = null;
+        }
+
+        function confirmDelete() {
+            if (deleteVoterId) {
+                document.getElementById('deleteForm').action = `/admin/voters/${deleteVoterId}/delete`;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+
+        // Show success/error messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success')) {
+                showMessage('Voter created successfully!', 'success');
+            } else if (urlParams.has('updated')) {
+                showMessage('Voter updated successfully!', 'success');
+            } else if (urlParams.has('deleted')) {
+                showMessage('Voter deleted successfully!', 'success');
+            }
+        });
+
+        function showMessage(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg z-50 transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            alertDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 4000);
+        }
+
+        // Search and filter functionality
+        function filterVoters() {
+            const searchInput = document.getElementById('searchInput');
+            const enabledFilter = document.getElementById('enabledFilter');
+            const voterCards = document.querySelectorAll('.voter-card');
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const enabledValue = enabledFilter.value;
+            
+            voterCards.forEach(card => {
+                const voterName = card.dataset.voterName.toLowerCase();
+                const voterUsername = card.dataset.voterUsername.toLowerCase();
+                const voterEnabled = card.dataset.voterEnabled;
+                
+                const matchesSearch = voterName.includes(searchTerm) || voterUsername.includes(searchTerm);
+                const matchesEnabled = enabledValue === '' || voterEnabled === enabledValue;
+                
+                if (matchesSearch && matchesEnabled) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Real-time search
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const enabledFilter = document.getElementById('enabledFilter');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', filterVoters);
+            }
+            if (enabledFilter) {
+                enabledFilter.addEventListener('change', filterVoters);
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 bottom-0 w-64 bg-gradient-to-b from-indigo-900 via-indigo-800 to-indigo-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+        <!-- Logo -->
+        <div class="p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">Admin Panel</h1>
+                    <p class="text-indigo-300 text-sm">Voting System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-6">
+            <ul class="space-y-2">
+                <li>
+                    <a href="/admin" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-tachometer-alt text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/elections" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-poll text-lg"></i>
+                        <span class="font-medium">Manage Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/candidates" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-users text-lg"></i>
+                        <span class="font-medium">Manage Candidates</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/voters" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-user-friends text-lg"></i>
+                        <span class="font-medium">Manage Voters</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">View Results</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-white shadow-sm border-b p-4 flex items-center justify-between">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800">Manage Voters</h1>
+            <div class="w-6"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Manage Voters</h1>
+                    <p class="text-gray-600 mt-1">Create, edit, and manage all voters</p>
+                </div>
+                <a href="/admin/voters/new" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add New Voter
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="p-6 bg-white border-b">
+            <div class="max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Search -->
+                    <div class="relative md:col-span-2">
+                        <i class="fas fa-search absolute left-4 top-4 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Search by name or username..." 
+                               class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="relative">
+                        <select id="enabledFilter" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voters List -->
+        <div class="p-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" th:if="${voters != null and !voters.empty}">
+                    <div th:each="voter : ${voters}" 
+                         class="voter-card bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-indigo-200 transform hover:scale-[1.02]"
+                         th:data-voter-name="${voter.fullName ?: voter.username}"
+                         th:data-voter-username="${voter.username}"
+                         th:data-voter-enabled="${voter.enabled}">
+                        
+                        <div class="p-6">
+                            <!-- Voter Header -->
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg"
+                                         th:text="${voter.fullName != null and !voter.fullName.empty ? voter.fullName.substring(0,1).toUpperCase() : voter.username.substring(0,1).toUpperCase()}">
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900" th:text="${voter.fullName ?: voter.username}"></h3>
+                                        <p class="text-sm text-gray-500" th:text="'@' + ${voter.username}"></p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Status Badge -->
+                                <span th:classappend="${voter.enabled} ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                      class="px-2 py-1 text-xs font-medium rounded-full">
+                                    <i th:class="${voter.enabled} ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="mr-1"></i>
+                                    <span th:text="${voter.enabled} ? 'Active' : 'Inactive'"></span>
+                                </span>
+                            </div>
+
+                            <!-- Voter Details -->
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-id-card w-4 text-gray-400 mr-2"></i>
+                                    <span th:text="'ID: ' + ${voter.id}"></span>
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600" th:if="${voter.fullName != null and !voter.fullName.empty}">
+                                    <i class="fas fa-user w-4 text-gray-400 mr-2"></i>
+                                    <span th:text="${voter.fullName}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex space-x-2">
+                                <a th:href="@{'/admin/voters/' + ${voter.id} + '/edit'}" 
+                                   class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 text-center">
+                                    <i class="fas fa-edit mr-1"></i>
+                                    Edit
+                                </a>
+                                <button type="button"
+                                        th:attr="data-voter-id=${voter.id}, data-voter-name=${voter.fullName ?: voter.username}"
+                                        onclick="showDeleteConfirmation(this.getAttribute('data-voter-id'), this.getAttribute('data-voter-name'))"
+                                        class="flex-1 bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${voters == null or voters.empty}" class="text-center py-16">
+                    <div class="max-w-md mx-auto">
+                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-user-friends text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">No Voters Found</h3>
+                        <p class="text-gray-600 mb-6">Get started by adding your first voter to the system.</p>
+                        <a href="/admin/voters/new" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 inline-flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add First Voter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-200">
+            <div class="p-6">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Delete Voter</h3>
+                        <p class="text-gray-600">This action cannot be undone</p>
+                    </div>
+                </div>
+                
+                <p class="text-gray-700 mb-6">
+                    Are you sure you want to delete voter <strong id="deleteVoterName"></strong>? 
+                    This will permanently remove all their data from the system.
+                </p>
+                
+                <div class="flex space-x-3">
+                    <button onclick="hideDeleteConfirmation()" 
+                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button onclick="confirmDelete()" 
+                            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        Delete Voter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden delete form -->
+    <form id="deleteForm" method="post" style="display: none;">
+        <input type="hidden" name="_method" value="delete" />
+    </form>
+</body>
+</html>
