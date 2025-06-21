@@ -152,7 +152,7 @@
                         </div>
                         <div class="ml-4">
                             <h3 class="text-sm font-medium text-gray-500">Active Elections</h3>
-                            <p class="text-2xl font-bold text-gray-900">3</p>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${activeElections}">0</p>
                         </div>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
                         </div>
                         <div class="ml-4">
                             <h3 class="text-sm font-medium text-gray-500">Votes Cast</h3>
-                            <p class="text-2xl font-bold text-gray-900">2</p>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${votesCast}">0</p>
                         </div>
                     </div>
                 </div>
@@ -174,7 +174,7 @@
                         </div>
                         <div class="ml-4">
                             <h3 class="text-sm font-medium text-gray-500">Results Available</h3>
-                            <p class="text-2xl font-bold text-gray-900">1</p>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${resultsAvailable}">0</p>
                         </div>
                     </div>
                 </div>
@@ -185,7 +185,7 @@
                         </div>
                         <div class="ml-4">
                             <h3 class="text-sm font-medium text-gray-500">Pending Votes</h3>
-                            <p class="text-2xl font-bold text-gray-900">1</p>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${pendingVotes}">0</p>
                         </div>
                     </div>
                 </div>
@@ -199,27 +199,61 @@
                         <h3 class="text-lg font-semibold text-gray-900">Current Elections</h3>
                         <a href="/voter/elections" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</a>
                     </div>
-                    <div class="space-y-4">
-                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    
+                    <div th:if="${#lists.isEmpty(currentElections)}" class="text-center py-8">
+                        <i class="fas fa-vote-yea text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500">No current elections available</p>
+                        <p class="text-sm text-gray-400">Check back later for new elections</p>
+                    </div>
+                    
+                    <div th:if="${!#lists.isEmpty(currentElections)}" class="space-y-4">
+                        <div th:each="election : ${currentElections}" class="p-4 bg-gray-50 rounded-lg border border-gray-200">
                             <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-medium text-gray-900">Student Council Election</h4>
-                                    <p class="text-sm text-gray-500">Ends in 2 days</p>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <h4 class="font-medium text-gray-900" th:text="${election.name}">Election Name</h4>
+                                        <span th:if="${election.status == 'active'}" 
+                                              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-play mr-1"></i>
+                                            Active
+                                        </span>
+                                        <span th:if="${election.status == 'upcoming'}" 
+                                              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Upcoming
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500">
+                                        <span th:if="${election.status == 'active'}">
+                                            Ends <span th:text="${#temporals.format(election.endTime, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                        </span>
+                                        <span th:if="${election.status == 'upcoming'}">
+                                            Starts <span th:text="${#temporals.format(election.startTime, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                        </span>
+                                    </p>
                                 </div>
-                                <a href="/voter/elections/1/vote" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition">
-                                    Vote Now
-                                </a>
-                            </div>
-                        </div>
-                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-medium text-gray-900">Faculty Representative</h4>
-                                    <p class="text-sm text-gray-500">Ends in 5 days</p>
+                                <div class="ml-4">
+                                    <div th:if="${election.status == 'active' && !election.voterHasVoted}">
+                                        <a th:href="@{/voter/elections/{id}/vote(id=${election.id})}" 
+                                           class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition inline-flex items-center">
+                                            <i class="fas fa-vote-yea mr-1"></i>
+                                            Vote Now
+                                        </a>
+                                    </div>
+                                    <div th:if="${election.status == 'active' && election.voterHasVoted}">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm inline-flex items-center">
+                                            <i class="fas fa-check mr-1"></i>
+                                            Voted
+                                        </span>
+                                    </div>
+                                    <div th:if="${election.status == 'upcoming'}">
+                                        <a th:href="@{/voter/elections/{id}/candidates(id=${election.id})}" 
+                                           class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition inline-flex items-center">
+                                            <i class="fas fa-users mr-1"></i>
+                                            View Candidates
+                                        </a>
+                                    </div>
                                 </div>
-                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                                    Voted
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -231,32 +265,31 @@
                         <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
                         <a href="/voter/history" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View History</a>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex items-center space-x-3">
+                    
+                    <div th:if="${votesCast == 0}" class="text-center py-8">
+                        <i class="fas fa-history text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500">No recent activity</p>
+                        <p class="text-sm text-gray-400">Your voting history will appear here</p>
+                    </div>
+                    
+                    <div th:if="${votesCast > 0}" class="space-y-4">
+                        <div th:each="election : ${currentElections}" th:if="${election.voterHasVoted}" class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-900">Vote cast successfully</p>
-                                <p class="text-xs text-gray-500">Faculty Representative Election - 2 hours ago</p>
+                                <p class="text-xs text-gray-500" th:text="${election.name + ' - Recently'}">Election - Recently</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3">
+                        
+                        <div th:if="${votesCast == 0}" class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-eye text-blue-600 text-sm"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Viewed candidate profiles</p>
-                                <p class="text-xs text-gray-500">Student Council Election - 1 day ago</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-chart-bar text-purple-600 text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">Viewed election results</p>
-                                <p class="text-xs text-gray-500">Club President Election - 3 days ago</p>
+                                <p class="text-sm font-medium text-gray-900">Viewed elections</p>
+                                <p class="text-xs text-gray-500">Exploring available elections</p>
                             </div>
                         </div>
                     </div>

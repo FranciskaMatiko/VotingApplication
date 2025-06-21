@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/voter")
@@ -25,14 +26,59 @@ public class VoterController {
     // Voter dashboard
     @GetMapping("")
     public String dashboard(Model model, @AuthenticationPrincipal Voter voter) {
-        // Add dashboard statistics
+        // Get all elections and calculate statistics
         List<Election> allElections = electionService.getAllElections();
+        
+        // Calculate status for each election
+        for (Election election : allElections) {
+            election.calculateStatus();
+            boolean hasVoted = voteService.hasVoted(voter.getId(), election.getId());
+            election.setVoterHasVoted(hasVoted);
+        }
+        
+        // Count elections by status
         long activeElections = allElections.stream()
-            .filter(e -> e.getEndTime().isAfter(LocalDateTime.now()))
+            .filter(e -> "active".equals(e.getStatus()))
+            .count();
+            
+        long upcomingElections = allElections.stream()
+            .filter(e -> "upcoming".equals(e.getStatus()))
+            .count();
+            
+        long completedElections = allElections.stream()
+            .filter(e -> "completed".equals(e.getStatus()))
             .count();
         
+        // Count votes cast by this voter
+        long votesCast = allElections.stream()
+            .filter(e -> voteService.hasVoted(voter.getId(), e.getId()))
+            .count();
+            
+        // Count pending votes (active elections where user hasn't voted)
+        long pendingVotes = allElections.stream()
+            .filter(e -> "active".equals(e.getStatus()) && !voteService.hasVoted(voter.getId(), e.getId()))
+            .count();
+            
+        // Count results available (completed elections with visible results)
+        long resultsAvailable = allElections.stream()
+            .filter(e -> "completed".equals(e.getStatus()) && e.isResultsVisible())
+            .count();
+        
+        // Get current active elections for dashboard display
+        List<Election> currentElections = allElections.stream()
+            .filter(e -> "active".equals(e.getStatus()) || "upcoming".equals(e.getStatus()))
+            .limit(5) // Show max 5 elections on dashboard
+            .collect(Collectors.toList());
+        
+        // Add all data to model
         model.addAttribute("activeElections", activeElections);
+        model.addAttribute("upcomingElections", upcomingElections);
+        model.addAttribute("completedElections", completedElections);
         model.addAttribute("totalElections", allElections.size());
+        model.addAttribute("votesCast", votesCast);
+        model.addAttribute("pendingVotes", pendingVotes);
+        model.addAttribute("resultsAvailable", resultsAvailable);
+        model.addAttribute("currentElections", currentElections);
         
         return "voter";
     }

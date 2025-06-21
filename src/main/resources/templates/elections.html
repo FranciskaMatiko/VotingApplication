@@ -166,80 +166,159 @@
             <!-- Elections Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 <!-- Election Card Template -->
-                <div th:each="election : ${elections}" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <!-- Election Status Badge -->
+                <div th:each="election : ${elections}" class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <!-- Election Header with Gradient -->
                     <div class="relative">
                         <div class="absolute top-4 right-4 z-10">
                             <span th:if="${election.status == 'active'}" 
-                                  class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                                Active
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
+                                <i class="fas fa-circle mr-1 text-green-500"></i>
+                                Live
                             </span>
                             <span th:if="${election.status == 'completed'}" 
-                                  class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-check-circle mr-1"></i>
                                 Completed
                             </span>
                             <span th:if="${election.status == 'upcoming'}" 
-                                  class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-clock mr-1"></i>
                                 Upcoming
                             </span>
                         </div>
-                        <div class="h-32 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+                        
+                        <!-- Voting Status Badge -->
+                        <div th:if="${election.status == 'active' && election.voterHasVoted}" class="absolute top-4 left-4 z-10">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 text-white">
+                                <i class="fas fa-check mr-1"></i>
+                                You Voted
+                            </span>
+                        </div>
+                        
+                        <div class="h-40 bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-700 relative overflow-hidden">
+                            <!-- Background Pattern -->
+                            <div class="absolute inset-0 opacity-20">
+                                <div class="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
+                                <div class="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-full translate-x-12 translate-y-12"></div>
+                            </div>
+                            
+                            <!-- Election Icon -->
+                            <div class="absolute bottom-4 left-4">
+                                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-vote-yea text-white text-xl"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Candidates Count Badge -->
+                            <div class="absolute bottom-4 right-4">
+                                <div class="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm">
+                                    <i class="fas fa-users mr-1"></i>
+                                    <span th:text="${election.candidates.size()}">5</span> candidates
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Election Content -->
                     <div class="p-6">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2" th:text="${election.name}">Student Council Election</h3>
-                        <p class="text-gray-600 mb-4 line-clamp-2" th:text="${election.description}">
-                            Choose your representatives for the upcoming academic year. Your voice matters in shaping our institution.
-                        </p>
+                        <!-- Election Title and Description -->
+                        <div class="mb-4">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2 leading-tight" th:text="${election.name}">Student Council Election</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed line-clamp-3" th:text="${election.description}">
+                                Choose your representatives for the upcoming academic year. Your voice matters in shaping our institution's future and policies.
+                            </p>
+                        </div>
 
                         <!-- Election Timeline -->
-                        <div class="space-y-2 mb-6">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <i class="fas fa-calendar-alt mr-2 text-indigo-500"></i>
-                                <span>Starts: </span>
-                                <span th:text="${#temporals.format(election.startTime, 'MMM dd, yyyy HH:mm')}" class="ml-1 font-medium">Dec 15, 2024 09:00</span>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <div class="grid grid-cols-1 gap-2">
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center text-green-600">
+                                        <i class="fas fa-play-circle mr-2"></i>
+                                        <span class="font-medium">Starts</span>
+                                    </div>
+                                    <span th:text="${#temporals.format(election.startTime, 'MMM dd, HH:mm')}" class="text-gray-700 font-medium">Dec 15, 09:00</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center text-red-600">
+                                        <i class="fas fa-stop-circle mr-2"></i>
+                                        <span class="font-medium">Ends</span>
+                                    </div>
+                                    <span th:text="${#temporals.format(election.endTime, 'MMM dd, HH:mm')}" class="text-gray-700 font-medium">Dec 22, 18:00</span>
+                                </div>
                             </div>
-                            <div class="flex items-center text-sm text-gray-500">
-                                <i class="fas fa-calendar-times mr-2 text-red-500"></i>
-                                <span>Ends: </span>
-                                <span th:text="${#temporals.format(election.endTime, 'MMM dd, yyyy HH:mm')}" class="ml-1 font-medium">Dec 22, 2024 18:00</span>
+                            
+                            <!-- Progress Bar for Active Elections -->
+                            <div th:if="${election.status == 'active'}" class="mt-3">
+                                <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                                    <span>Election Progress</span>
+                                    <span>Active</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Candidates Count -->
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <i class="fas fa-users mr-2 text-purple-500"></i>
-                                <span th:text="${election.candidates.size()} + ' candidates'">5 candidates</span>
+                        <!-- Voting Type and Additional Info -->
+                        <div class="flex items-center justify-between mb-4 text-sm">
+                            <div class="flex items-center text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <span th:text="${election.votingType ?: 'Single Choice'}">Single Choice</span>
                             </div>
-                            <div class="flex items-center text-sm text-gray-500">
-                                <i class="fas fa-clock mr-2 text-orange-500"></i>
-                                <span th:if="${election.status == 'active'}" class="text-green-600 font-medium">Active</span>
-                                <span th:if="${election.status == 'upcoming'}" class="text-blue-600 font-medium">Upcoming</span>
-                                <span th:if="${election.status == 'completed'}" class="text-gray-600">Ended</span>
+                            <div th:if="${election.status == 'active'}" class="flex items-center text-indigo-600">
+                                <i class="fas fa-eye mr-1"></i>
+                                <span class="font-medium">Live Voting</span>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex space-x-3">
-                            <a th:href="@{/voter/elections/{id}/candidates(id=${election.id})}" 
-                               class="flex-1 bg-gray-100 text-gray-700 text-center py-2 px-4 rounded-lg hover:bg-gray-200 transition text-sm font-medium">
-                                <i class="fas fa-eye mr-1"></i>
-                                View Candidates
-                            </a>
-                            <a th:if="${election.status == 'active'}" 
-                               th:href="@{/voter/elections/{id}/vote(id=${election.id})}" 
-                               class="flex-1 bg-indigo-600 text-white text-center py-2 px-4 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
-                                <i class="fas fa-check-circle mr-1"></i>
-                                Vote Now
-                            </a>
-                            <a th:if="${election.status == 'completed' && election.resultsVisible}" 
-                               th:href="@{/voter/elections/{id}/results(id=${election.id})}" 
-                               class="flex-1 bg-purple-600 text-white text-center py-2 px-4 rounded-lg hover:bg-purple-700 transition text-sm font-medium">
-                                <i class="fas fa-chart-bar mr-1"></i>
-                                View Results
-                            </a>
+                        <div class="space-y-3">
+                            <!-- Primary Action Button -->
+                            <div th:if="${election.status == 'active' && !election.voterHasVoted}">
+                                <a th:href="@{/voter/elections/{id}/vote(id=${election.id})}" 
+                                   class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-3 px-4 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:scale-105 inline-block">
+                                    <i class="fas fa-vote-yea mr-2"></i>
+                                    Cast Your Vote
+                                </a>
+                            </div>
+                            
+                            <div th:if="${election.status == 'active' && election.voterHasVoted}">
+                                <div class="w-full bg-green-100 text-green-800 text-center py-3 px-4 rounded-lg font-semibold border-2 border-green-200">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    Vote Successfully Cast
+                                </div>
+                            </div>
+                            
+                            <div th:if="${election.status == 'upcoming'}">
+                                <div class="w-full bg-yellow-50 text-yellow-800 text-center py-3 px-4 rounded-lg font-semibold border-2 border-yellow-200">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    Voting Not Started
+                                </div>
+                            </div>
+                            
+                            <!-- Secondary Actions -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <a th:href="@{/voter/elections/{id}/candidates(id=${election.id})}" 
+                                   class="bg-gray-100 text-gray-700 text-center py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium">
+                                    <i class="fas fa-users mr-1"></i>
+                                    Candidates
+                                </a>
+                                
+                                <a th:if="${election.status == 'completed' && election.resultsVisible}" 
+                                   th:href="@{/voter/elections/{id}/results(id=${election.id})}" 
+                                   class="bg-purple-100 text-purple-700 text-center py-2 px-4 rounded-lg hover:bg-purple-200 transition-colors duration-200 text-sm font-medium">
+                                    <i class="fas fa-chart-bar mr-1"></i>
+                                    Results
+                                </a>
+                                
+                                <a th:if="${election.status != 'completed' || !election.resultsVisible}" 
+                                   th:href="@{/voter/elections/{id}(id=${election.id})}" 
+                                   class="bg-blue-100 text-blue-700 text-center py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm font-medium">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Details
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
