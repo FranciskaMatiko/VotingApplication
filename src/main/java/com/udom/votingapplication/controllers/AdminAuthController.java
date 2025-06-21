@@ -18,16 +18,7 @@ public class AdminAuthController {
         this.adminService = adminService;
     }
 
-    @GetMapping("/register")
-    public String showRegisterForm(Model model) {
-        model.addAttribute("admin", new Admin());
-        return "admin/register";
-    }
-
-    @PostMapping("/register")
-    public String processRegister(@Valid @ModelAttribute("admin") Admin admin, BindingResult br) {
-        if (br.hasErrors()) return "admin/register";
-        adminService.register(admin);
-        return "redirect:/login?registered";
-    }
+    // Admin registration removed for security reasons
+    // Only super admin can create admin accounts through the database directly
+    // or through a future super admin panel
 }

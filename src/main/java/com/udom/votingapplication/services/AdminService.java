@@ -29,4 +29,12 @@ public class AdminService implements UserDetailsService {
                 .map(admin -> (UserDetails) admin)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
+
+    public Admin findByUsername(String username) {
+        return adminRepository.findByUsername(username).orElse(null);
+    }
+
+    public Admin save(Admin admin) {
+        return adminRepository.save(admin);
+    }
 }

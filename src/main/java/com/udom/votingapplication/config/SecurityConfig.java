@@ -29,8 +29,7 @@ public class SecurityConfig {
         http
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(c -> c
-                        .requestMatchers("/css/**", "/js/**", "/register", "/register/**", 
-                                        "/admin/register", "/admin/register/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/register", "/register/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/voter/**").hasRole("VOTER")
                         .anyRequest().authenticated())
