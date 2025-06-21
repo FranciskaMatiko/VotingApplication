@@ -16,8 +16,11 @@ public class Election {
     private boolean resultsVisible;
     private String votingType = "single"; // single or multiple
 
-    @OneToMany(mappedBy = "election")
+    @OneToMany(mappedBy = "election", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Candidate> candidates;
+
+    @OneToMany(mappedBy = "election", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vote> votes;
 
     // Add transient field for UI purposes
     @Transient
@@ -80,6 +83,14 @@ public class Election {
 
     public void setCandidates(List<Candidate> candidates) {
         this.candidates = candidates;
+    }
+
+    public List<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(List<Vote> votes) {
+        this.votes = votes;
     }
 
     public boolean isVoterHasVoted() { return voterHasVoted; }

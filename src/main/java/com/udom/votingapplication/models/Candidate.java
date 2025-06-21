@@ -1,6 +1,7 @@
 package com.udom.votingapplication.models;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 public class Candidate {
@@ -16,6 +17,9 @@ public class Candidate {
     @JoinColumn(name = "election_id")
     private Election election;
 
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vote> votes;
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -29,4 +33,6 @@ public class Candidate {
     public void setPosition(String position) { this.position = position; }
     public Election getElection() { return election; }
     public void setElection(Election election) { this.election = election; }
+    public List<Vote> getVotes() { return votes; }
+    public void setVotes(List<Vote> votes) { this.votes = votes; }
 }
