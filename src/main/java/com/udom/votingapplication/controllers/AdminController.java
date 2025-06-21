@@ -6,6 +6,23 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.colors.ColorConstants;
+
+import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -356,5 +373,151 @@ public class AdminController {
         model.addAttribute("isElectionView", true);
         
         return "admin/candidates";
+    }
+
+    // Export detailed election results as PDF
+    @GetMapping("/results/{electionId}/export")
+    public ResponseEntity<byte[]> exportElectionResultsPDF(@PathVariable Long electionId) {
+        try {
+            Election election = electionService.getElection(electionId)
+                .orElseThrow(() -> new RuntimeException("Election not found"));
+            
+            ElectionResult electionResult = resultService.getElectionResult(election);
+            List<CandidateResult> candidateResults = resultService.getCandidateResults(electionId);
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdfDoc = new PdfDocument(writer);
+            Document document = new Document(pdfDoc);
+            
+            // Set font
+            PdfFont font = PdfFontFactory.createFont();
+            PdfFont boldFont = PdfFontFactory.createFont();
+            
+            // Title
+            Paragraph title = new Paragraph("Election Results Report")
+                .setFont(boldFont)
+                .setFontSize(20)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(10);
+            document.add(title);
+            
+            // Election name
+            Paragraph electionName = new Paragraph(election.getName())
+                .setFont(boldFont)
+                .setFontSize(16)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(5);
+            document.add(electionName);
+            
+            // Date generated
+            Paragraph dateGenerated = new Paragraph("Generated on: " + 
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")))
+                .setFont(font)
+                .setFontSize(10)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(20);
+            document.add(dateGenerated);
+            
+            // Summary statistics
+            Paragraph summaryTitle = new Paragraph("Election Summary")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setMarginBottom(10);
+            document.add(summaryTitle);
+            
+            // Summary table
+            Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{50, 50}));
+            summaryTable.setWidth(UnitValue.createPercentValue(100));
+            
+            summaryTable.addCell(new Cell().add(new Paragraph("Total Votes:").setFont(font)));
+            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(electionResult.getTotalVotes())).setFont(font)));
+            
+            summaryTable.addCell(new Cell().add(new Paragraph("Total Candidates:").setFont(font)));
+            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(electionResult.getTotalCandidates())).setFont(font)));
+            
+            summaryTable.addCell(new Cell().add(new Paragraph("Eligible Voters:").setFont(font)));
+            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(electionResult.getTotalEligibleVoters())).setFont(font)));
+            
+            summaryTable.addCell(new Cell().add(new Paragraph("Participation Rate:").setFont(font)));
+            summaryTable.addCell(new Cell().add(new Paragraph(String.format("%.1f%%", electionResult.getParticipationRate())).setFont(font)));
+            
+            document.add(summaryTable);
+            document.add(new Paragraph(" ").setMarginBottom(20));
+            
+            // Winner section
+            if (electionResult.getWinner() != null) {
+                Paragraph winnerTitle = new Paragraph("Election Winner")
+                    .setFont(boldFont)
+                    .setFontSize(14)
+                    .setMarginBottom(10);
+                document.add(winnerTitle);
+                
+                Paragraph winnerInfo = new Paragraph(
+                    "Winner: " + electionResult.getWinner().getName() + 
+                    " (" + electionResult.getWinner().getParty() + ")")
+                    .setFont(boldFont)
+                    .setFontSize(12)
+                    .setMarginBottom(20);
+                document.add(winnerInfo);
+            }
+            
+            // Detailed results
+            Paragraph resultsTitle = new Paragraph("Detailed Results")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setMarginBottom(10);
+            document.add(resultsTitle);
+            
+            // Results table
+            Table resultsTable = new Table(UnitValue.createPercentArray(new float[]{10, 30, 20, 20, 15, 15}));
+            resultsTable.setWidth(UnitValue.createPercentValue(100));
+            
+            // Header row
+            resultsTable.addHeaderCell(new Cell().add(new Paragraph("Rank").setFont(boldFont)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            resultsTable.addHeaderCell(new Cell().add(new Paragraph("Candidate").setFont(boldFont)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            resultsTable.addHeaderCell(new Cell().add(new Paragraph("Party").setFont(boldFont)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            resultsTable.addHeaderCell(new Cell().add(new Paragraph("Position").setFont(boldFont)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            resultsTable.addHeaderCell(new Cell().add(new Paragraph("Votes").setFont(boldFont)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            resultsTable.addHeaderCell(new Cell().add(new Paragraph("Percentage").setFont(boldFont)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            
+            // Data rows
+            for (int i = 0; i < candidateResults.size(); i++) {
+                CandidateResult candidate = candidateResults.get(i);
+                
+                resultsTable.addCell(new Cell().add(new Paragraph(String.valueOf(i + 1)).setFont(font)));
+                resultsTable.addCell(new Cell().add(new Paragraph(candidate.getCandidateName()).setFont(font)));
+                resultsTable.addCell(new Cell().add(new Paragraph(candidate.getParty() != null ? candidate.getParty() : "Independent").setFont(font)));
+                resultsTable.addCell(new Cell().add(new Paragraph(candidate.getPosition() != null ? candidate.getPosition() : "N/A").setFont(font)));
+                resultsTable.addCell(new Cell().add(new Paragraph(String.valueOf(candidate.getVoteCount())).setFont(font)));
+                resultsTable.addCell(new Cell().add(new Paragraph(String.format("%.1f%%", candidate.getPercentage())).setFont(font)));
+            }
+            
+            document.add(resultsTable);
+            
+            // Footer
+            document.add(new Paragraph(" ").setMarginTop(20));
+            Paragraph footer = new Paragraph("This is an official election results report generated by the Voting System.")
+                .setFont(font)
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(20);
+            document.add(footer);
+            
+            document.close();
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", 
+                "election-results-" + election.getName().replaceAll("[^a-zA-Z0-9]", "-") + ".pdf");
+            
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(baos.toByteArray());
+                
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
