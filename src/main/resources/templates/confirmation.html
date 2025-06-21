@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vote Confirmation - Voting System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Auto redirect after a delay
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success')) {
+                setTimeout(() => {
+                    const countdown = document.getElementById('countdown');
+                    let seconds = 10;
+                    
+                    const timer = setInterval(() => {
+                        countdown.textContent = seconds;
+                        seconds--;
+                        
+                        if (seconds < 0) {
+                            clearInterval(timer);
+                            window.location.href = '/voter/elections';
+                        }
+                    }, 1000);
+                }, 2000);
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">VoteSystem</h2>
+                    <p class="text-xs text-indigo-300">Secure Voting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">John Doe</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">username</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/voter" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-tachometer-alt text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-all duration-200">
+                        <i class="fas fa-calendar-check text-lg"></i>
+                        <span class="font-medium">Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/vote" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span class="font-medium">Cast Vote</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/history" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-history text-lg"></i>
+                        <span class="font-medium">Vote History</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gray-800">Vote Confirmation</h1>
+                </div>
+                
+                <!-- Security Indicator -->
+                <div class="flex items-center space-x-2 bg-green-50 text-green-800 px-3 py-1 rounded-full">
+                    <i class="fas fa-shield-alt text-green-600"></i>
+                    <span class="text-sm font-medium">Secure System</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Confirmation Content -->
+        <main class="p-6">
+            <div class="max-w-2xl mx-auto">
+                <!-- Success Message -->
+                <div th:if="${param.success}" class="text-center">
+                    <!-- Success Animation -->
+                    <div class="mb-8">
+                        <div class="w-32 h-32 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-6 animate-bounce">
+                            <i class="fas fa-check text-green-600 text-5xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Success Card -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Vote Cast Successfully!</h2>
+                        <p class="text-gray-600 mb-6 text-lg">
+                            Thank you for participating in the democratic process. Your vote has been securely recorded and will be counted in the final results.
+                        </p>
+
+                        <!-- Vote Details -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-vote-yea text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-lg font-semibold text-green-800 mb-2">Vote Confirmation</h3>
+                            <div class="space-y-2 text-green-700">
+                                <div class="flex items-center justify-between">
+                                    <span>Vote ID:</span>
+                                    <span class="font-mono bg-green-100 px-2 py-1 rounded">#<span th:text="${#temporals.format(#temporals.createNow(), 'yyyyMMddHHmmss')}">20241215143022</span></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>Timestamp:</span>
+                                    <span th:text="${#temporals.format(#temporals.createNow(), 'MMM dd, yyyy HH:mm:ss')}">Dec 15, 2024 14:30:22</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>Status:</span>
+                                    <span class="bg-green-500 text-white px-2 py-1 rounded text-sm">Confirmed</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Features -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            <div class="bg-blue-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-shield-alt text-blue-600 text-2xl mb-2"></i>
+                                <h4 class="font-semibold text-blue-800">Secure</h4>
+                                <p class="text-blue-600 text-sm">End-to-end encryption</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-user-secret text-purple-600 text-2xl mb-2"></i>
+                                <h4 class="font-semibold text-purple-800">Anonymous</h4>
+                                <p class="text-purple-600 text-sm">Your identity is protected</p>
+                            </div>
+                            <div class="bg-indigo-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-check-double text-indigo-600 text-2xl mb-2"></i>
+                                <h4 class="font-semibold text-indigo-800">Verified</h4>
+                                <p class="text-indigo-600 text-sm">Vote integrity ensured</p>
+                            </div>
+                        </div>
+
+                        <!-- Auto Redirect Notice -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-center justify-center text-gray-600">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>Redirecting to elections page in <span id="countdown" class="font-bold text-indigo-600">10</span> seconds...</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="/voter/elections" 
+                               class="flex-1 bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Back to Elections
+                            </a>
+                            <a href="/voter" 
+                               class="flex-1 bg-gray-100 text-gray-700 text-center py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-semibold">
+                                <i class="fas fa-home mr-2"></i>
+                                Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Already Voted Message -->
+                <div th:if="${param.alreadyVoted}" class="text-center">
+                    <!-- Warning Animation -->
+                    <div class="mb-8">
+                        <div class="w-32 h-32 bg-yellow-100 rounded-full mx-auto flex items-center justify-center mb-6">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-5xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Already Voted Card -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Already Voted</h2>
+                        <p class="text-gray-600 mb-6 text-lg">
+                            You have already cast your vote in this election. Each voter is only allowed to vote once per election to ensure fairness and integrity.
+                        </p>
+
+                        <!-- Vote Status -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-lg font-semibold text-yellow-800 mb-2">Vote Status</h3>
+                            <div class="text-yellow-700 text-center">
+                                <p class="mb-2">Your vote has been previously recorded</p>
+                                <span class="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Vote Confirmed
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="/voter/elections" 
+                               class="flex-1 bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Back to Elections
+                            </a>
+                            <a href="/voter/history" 
+                               class="flex-1 bg-gray-100 text-gray-700 text-center py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-semibold">
+                                <i class="fas fa-history mr-2"></i>
+                                Vote History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div th:if="${param.error}" class="text-center">
+                    <!-- Error Animation -->
+                    <div class="mb-8">
+                        <div class="w-32 h-32 bg-red-100 rounded-full mx-auto flex items-center justify-center mb-6">
+                            <i class="fas fa-times text-red-600 text-5xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Error Card -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Voting Error</h2>
+                        <p class="text-gray-600 mb-6 text-lg">
+                            There was an issue processing your vote. Please try again or contact support if the problem persists.
+                        </p>
+
+                        <!-- Error Details -->
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-exclamation text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-lg font-semibold text-red-800 mb-2">Error Details</h3>
+                            <p class="text-red-700 text-center">
+                                <span th:if="${param.error == 'notActive'}">The election is not currently active for voting.</span>
+                                <span th:if="${param.error == 'invalidCandidate'}">Invalid candidate selection.</span>
+                                <span th:if="${param.error == 'votingFailed'}">Failed to process your vote. Please try again.</span>
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="/voter/elections" 
+                               class="flex-1 bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Back to Elections
+                            </a>
+                            <a href="/voter" 
+                               class="flex-1 bg-gray-100 text-gray-700 text-center py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-semibold">
+                                <i class="fas fa-home mr-2"></i>
+                                Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% {
+                transform: translate3d(0,0,0);
+            }
+            40%, 43% {
+                transform: translate3d(0,-30px,0);
+            }
+            70% {
+                transform: translate3d(0,-15px,0);
+            }
+            90% {
+                transform: translate3d(0,-4px,0);
+            }
+        }
+        .animate-bounce {
+            animation: bounce 1s ease-in-out infinite;
+        }
+    </style>
+</body>
+</html>

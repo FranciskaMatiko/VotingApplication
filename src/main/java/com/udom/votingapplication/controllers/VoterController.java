@@ -111,24 +111,60 @@ public class VoterController {
     // Cast vote
     @GetMapping("/elections/{electionId}/vote")
     public String voteForm(@PathVariable Long electionId, Model model, @AuthenticationPrincipal Voter voter) {
+        Election election = electionService.getElection(electionId)
+            .orElseThrow(() -> new RuntimeException("Election not found"));
+        
+        // Check if election is active
+        election.calculateStatus();
+        if (!"active".equals(election.getStatus())) {
+            return "redirect:/voter/elections?error=notActive";
+        }
+        
+        // Check if voter has already voted
         if (voteService.hasVoted(voter.getId(), electionId)) {
             return "redirect:/voter/confirmation?alreadyVoted";
         }
+        
         List<Candidate> candidates = candidateService.getCandidatesByElection(electionId);
+        
+        model.addAttribute("election", election);
         model.addAttribute("candidates", candidates);
         model.addAttribute("electionId", electionId);
         return "vote";
     }
 
     @PostMapping("/elections/{electionId}/vote")
-    public String castVote(@PathVariable Long electionId, @RequestParam Long candidateId, @AuthenticationPrincipal Voter voter, Model model) {
-        if (voteService.hasVoted(voter.getId(), electionId)) {
-            return "redirect:/voter/confirmation?alreadyVoted";
+    public String castVote(@PathVariable Long electionId, @RequestParam Long candidateId, 
+                          @AuthenticationPrincipal Voter voter, Model model) {
+        try {
+            Election election = electionService.getElection(electionId)
+                .orElseThrow(() -> new RuntimeException("Election not found"));
+            
+            // Check if election is still active
+            election.calculateStatus();
+            if (!"active".equals(election.getStatus())) {
+                return "redirect:/voter/elections?error=notActive";
+            }
+            
+            // Check if voter has already voted
+            if (voteService.hasVoted(voter.getId(), electionId)) {
+                return "redirect:/voter/confirmation?alreadyVoted";
+            }
+            
+            Candidate candidate = candidateService.getCandidate(candidateId)
+                .orElseThrow(() -> new RuntimeException("Candidate not found"));
+            
+            // Verify candidate belongs to this election
+            if (!candidate.getElection().getId().equals(electionId)) {
+                return "redirect:/voter/elections?error=invalidCandidate";
+            }
+            
+            voteService.castVote(voter, candidate, election);
+            return "redirect:/voter/confirmation?success&election=" + electionId + "&candidate=" + candidateId;
+            
+        } catch (Exception e) {
+            return "redirect:/voter/elections?error=votingFailed";
         }
-        Candidate candidate = candidateService.getCandidate(candidateId).orElseThrow();
-        Election election = electionService.getElection(electionId).orElseThrow();
-        voteService.castVote(voter, candidate, election);
-        return "redirect:/voter/confirmation?success";
     }
 
     // Vote confirmation
@@ -154,5 +190,40 @@ public class VoterController {
         model.addAttribute("candidates", candidates);
         model.addAttribute("election", election);
         return "results";
+    }
+
+    // Voter profile page
+    @GetMapping("/profile")
+    public String profile(Model model, @AuthenticationPrincipal Voter voter) {
+        model.addAttribute("voter", voter);
+        return "voter-profile";
+    }
+
+    // General cast vote page (redirects to elections)
+    @GetMapping("/vote")
+    public String vote() {
+        return "redirect:/voter/elections";
+    }
+
+    // Vote history page
+    @GetMapping("/history")
+    public String history(Model model, @AuthenticationPrincipal Voter voter) {
+        List<Election> allElections = electionService.getAllElections();
+        List<Election> votedElections = allElections.stream()
+            .filter(election -> voteService.hasVoted(voter.getId(), election.getId()))
+            .collect(Collectors.toList());
+        
+        for (Election election : votedElections) {
+            election.calculateStatus();
+        }
+        
+        model.addAttribute("votedElections", votedElections);
+        return "voter-history";
+    }
+
+    // Help page
+    @GetMapping("/help")
+    public String help() {
+        return "voter-help";
     }
 }

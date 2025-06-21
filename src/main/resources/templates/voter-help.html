@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Help & FAQ - Voting System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function toggleFAQ(index) {
+            const content = document.getElementById('faq-content-' + index);
+            const icon = document.getElementById('faq-icon-' + index);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-minus');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-plus');
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">VoteSystem</h2>
+                    <p class="text-xs text-indigo-300">Secure Voting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">John Doe</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">username</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/voter" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-tachometer-alt text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/profile" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span class="font-medium">My Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/elections" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-calendar-check text-lg"></i>
+                        <span class="font-medium">Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/vote" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span class="font-medium">Cast Vote</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/history" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-history text-lg"></i>
+                        <span class="font-medium">Vote History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/help" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-all duration-200">
+                        <i class="fas fa-question-circle text-lg"></i>
+                        <span class="font-medium">Help & FAQ</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gray-800">Help & FAQ</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell text-gray-600 text-lg cursor-pointer hover:text-indigo-600"></i>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Help Content -->
+        <main class="p-6">
+            <!-- Page Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Help & Support</h2>
+                        <p class="text-indigo-100">Find answers to common questions and get help with the voting system</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <i class="fas fa-question-circle text-6xl text-indigo-200"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Help Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-vote-yea text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">How to Vote</h3>
+                    <p class="text-gray-600 text-sm">Learn the step-by-step process of casting your vote securely</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Security</h3>
+                    <p class="text-gray-600 text-sm">Understand how your vote is protected and kept confidential</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-headset text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Support</h3>
+                    <p class="text-gray-600 text-sm">Get help from our support team when you need assistance</p>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">Frequently Asked Questions</h3>
+                
+                <div class="space-y-4">
+                    <!-- FAQ Item 1 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <button onclick="toggleFAQ(1)" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="font-medium text-gray-900">How do I cast my vote?</span>
+                            <i id="faq-icon-1" class="fas fa-plus text-gray-500"></i>
+                        </button>
+                        <div id="faq-content-1" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                            <p class="text-gray-700">To cast your vote, navigate to the Elections page, find an active election, and click "Vote Now". Select your preferred candidate and confirm your choice. Your vote will be recorded securely and cannot be changed once submitted.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 2 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <button onclick="toggleFAQ(2)" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="font-medium text-gray-900">Can I change my vote after submitting?</span>
+                            <i id="faq-icon-2" class="fas fa-plus text-gray-500"></i>
+                        </button>
+                        <div id="faq-content-2" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                            <p class="text-gray-700">No, once you submit your vote, it cannot be changed. This ensures the integrity and security of the voting process. Please review your choice carefully before confirming your vote.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 3 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <button onclick="toggleFAQ(3)" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="font-medium text-gray-900">How do I know if my vote was counted?</span>
+                            <i id="faq-icon-3" class="fas fa-plus text-gray-500"></i>
+                        </button>
+                        <div id="faq-content-3" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                            <p class="text-gray-700">After casting your vote, you'll receive a confirmation message. You can also check your Vote History page to see all elections you've participated in. The system will show a "Vote Cast" status for elections where you've successfully voted.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 4 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <button onclick="toggleFAQ(4)" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="font-medium text-gray-900">When can I see election results?</span>
+                            <i id="faq-icon-4" class="fas fa-plus text-gray-500"></i>
+                        </button>
+                        <div id="faq-content-4" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                            <p class="text-gray-700">Election results are available after the voting period ends and the administrator makes them visible. You'll see a "View Results" button on completed elections where results are available.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 5 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <button onclick="toggleFAQ(5)" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="font-medium text-gray-900">Is my vote secret and secure?</span>
+                            <i id="faq-icon-5" class="fas fa-plus text-gray-500"></i>
+                        </button>
+                        <div id="faq-content-5" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                            <p class="text-gray-700">Yes, your vote is completely confidential. The system uses secure encryption to protect your vote, and no one can see who you voted for. Only aggregate results are displayed to maintain voter privacy.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 6 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <button onclick="toggleFAQ(6)" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="font-medium text-gray-900">What if I encounter technical issues?</span>
+                            <i id="faq-icon-6" class="fas fa-plus text-gray-500"></i>
+                        </button>
+                        <div id="faq-content-6" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                            <p class="text-gray-700">If you experience any technical difficulties, try refreshing the page or logging out and back in. If problems persist, contact our support team using the contact information provided below.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">Still Need Help?</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-envelope text-blue-600 text-2xl mr-3"></i>
+                            <h4 class="text-lg font-semibold text-gray-900">Email Support</h4>
+                        </div>
+                        <p class="text-gray-700 mb-4">Send us an email and we'll get back to you within 24 hours.</p>
+                        <a href="mailto:support@votingsystem.com" class="text-blue-600 hover:text-blue-800 font-medium">support@votingsystem.com</a>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-phone text-green-600 text-2xl mr-3"></i>
+                            <h4 class="text-lg font-semibold text-gray-900">Phone Support</h4>
+                        </div>
+                        <p class="text-gray-700 mb-4">Call us during business hours for immediate assistance.</p>
+                        <a href="tel:+1234567890" class="text-green-600 hover:text-green-800 font-medium">+1 (234) 567-8900</a>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-clock text-yellow-600 mr-2"></i>
+                        <span class="font-medium text-yellow-800">Support Hours:</span>
+                        <span class="text-yellow-700 ml-2">Monday - Friday, 9:00 AM - 5:00 PM</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

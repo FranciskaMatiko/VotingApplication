@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Cast Vote - ' + ${election.name} + ' - Voting System'">Cast Vote - Voting System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        let selectedCandidate = null;
+
+        function selectCandidateFromData(element) {
+            const candidateId = element.getAttribute('data-candidate-id');
+            const candidateName = element.getAttribute('data-candidate-name');
+            const candidateParty = element.getAttribute('data-candidate-party');
+            
+            selectCandidate(candidateId, candidateName, candidateParty);
+        }
+
+        function selectCandidate(candidateId, candidateName, candidateParty) {
+            // Remove previous selection
+            document.querySelectorAll('.candidate-card').forEach(card => {
+                card.classList.remove('ring-4', 'ring-indigo-500', 'bg-indigo-50');
+                card.classList.add('bg-white');
+            });
+
+            // Add selection to clicked card
+            const selectedCard = document.getElementById('candidate-' + candidateId);
+            selectedCard.classList.add('ring-4', 'ring-indigo-500', 'bg-indigo-50');
+            selectedCard.classList.remove('bg-white');
+
+            // Update selected candidate
+            selectedCandidate = candidateId;
+
+            // Show confirmation section
+            document.getElementById('confirmationSection').classList.remove('hidden');
+            document.getElementById('selectedCandidateName').textContent = candidateName;
+            document.getElementById('selectedCandidateParty').textContent = candidateParty || 'Independent';
+            document.getElementById('selectedCandidateId').value = candidateId;
+
+            // Enable vote button
+            document.getElementById('castVoteBtn').disabled = false;
+            document.getElementById('castVoteBtn').classList.remove('bg-gray-400', 'cursor-not-allowed');
+            document.getElementById('castVoteBtn').classList.add('bg-gradient-to-r', 'from-green-600', 'to-emerald-600', 'hover:from-green-700', 'hover:to-emerald-700');
+        }
+
+        function confirmVote() {
+            if (!selectedCandidate) {
+                showCustomAlert('Please select a candidate first.');
+                return;
+            }
+
+            const candidateName = document.getElementById('selectedCandidateName').textContent;
+            const candidatePosition = document.getElementById('selectedCandidatePosition').textContent;
+            
+            // Update confirmation modal content
+            document.getElementById('modalCandidateName').textContent = candidateName;
+            document.getElementById('modalCandidatePosition').textContent = candidatePosition;
+            
+            showVoteModal();
+        }
+
+        function showCustomAlert(message) {
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('alertModal').classList.remove('hidden');
+        }
+
+        function hideCustomAlert() {
+            document.getElementById('alertModal').classList.add('hidden');
+        }
+
+        function showVoteModal() {
+            document.getElementById('voteModal').classList.remove('hidden');
+        }
+
+        function hideVoteModal() {
+            document.getElementById('voteModal').classList.add('hidden');
+        }
+
+        function submitVote() {
+            document.getElementById('voteForm').submit();
+        }
+
+        // Add animation and feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effects
+            document.querySelectorAll('.candidate-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('ring-4')) {
+                        this.classList.add('shadow-lg', 'transform', 'scale-105');
+                    }
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('ring-4')) {
+                        this.classList.remove('shadow-lg', 'transform', 'scale-105');
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">VoteSystem</h2>
+                    <p class="text-xs text-indigo-300">Secure Voting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">John Doe</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">username</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/voter" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-tachometer-alt text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-all duration-200">
+                        <i class="fas fa-calendar-check text-lg"></i>
+                        <span class="font-medium">Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/vote" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span class="font-medium">Cast Vote</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/history" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-history text-lg"></i>
+                        <span class="font-medium">Vote History</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <a href="/voter/elections" class="text-indigo-600 hover:text-indigo-800 transition-colors">
+                            <i class="fas fa-arrow-left text-lg"></i>
+                        </a>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">Cast Your Vote</h1>
+                            <p class="text-sm text-gray-600" th:text="${election.name}">Election Name</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Indicator -->
+                <div class="flex items-center space-x-2 bg-green-50 text-green-800 px-3 py-1 rounded-full">
+                    <i class="fas fa-shield-alt text-green-600"></i>
+                    <span class="text-sm font-medium">Secure Voting</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Voting Content -->
+        <main class="p-6">
+            <!-- Election Info Banner -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2" th:text="${election.name}">Student Council Election</h2>
+                        <p class="text-indigo-100 mb-4" th:text="${election.description}">Choose your representatives for the upcoming academic year.</p>
+                        <div class="flex items-center space-x-6 text-indigo-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar mr-2"></i>
+                                <span>Ends: <span th:text="${#temporals.format(election.endTime, 'MMM dd, yyyy HH:mm')}">Dec 22, 2024 18:00</span></span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-users mr-2"></i>
+                                <span th:text="${candidates.size()} + ' candidates'">5 candidates</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-vote-yea mr-2"></i>
+                                <span th:text="${election.votingType ?: 'Single Choice'}">Single Choice</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-vote-yea text-4xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voting Instructions -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
+                <div class="flex">
+                    <i class="fas fa-info-circle text-blue-400 mt-1 mr-3"></i>
+                    <div>
+                        <h3 class="text-blue-800 font-semibold mb-1">Voting Instructions</h3>
+                        <p class="text-blue-700 text-sm">
+                            Select one candidate by clicking on their card. Review your choice carefully before submitting your vote. 
+                            <strong>Once submitted, your vote cannot be changed.</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidates Grid -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-6">Select Your Candidate</h3>
+                
+                <div th:if="${#lists.isEmpty(candidates)}" class="text-center py-12">
+                    <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">No Candidates Available</h3>
+                    <p class="text-gray-400">There are no candidates registered for this election yet.</p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(candidates)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div th:each="candidate : ${candidates}" 
+                         th:id="'candidate-' + ${candidate.id}"
+                         class="candidate-card bg-white rounded-xl shadow-md border-2 border-gray-200 p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
+                         th:data-candidate-id="${candidate.id}"
+                         th:data-candidate-name="${candidate.name}"
+                         th:data-candidate-party="${candidate.party}"
+                         onclick="selectCandidateFromData(this)">
+                        
+                        <!-- Candidate Avatar -->
+                        <div class="text-center mb-4">
+                            <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full mx-auto flex items-center justify-center mb-3">
+                                <i class="fas fa-user text-white text-2xl"></i>
+                            </div>
+                            <h4 class="text-lg font-bold text-gray-900" th:text="${candidate.name}">John Smith</h4>
+                            <p class="text-sm text-indigo-600 font-medium" th:text="${candidate.party ?: 'Independent'}">Democratic Party</p>
+                        </div>
+
+                        <!-- Candidate Details -->
+                        <div class="space-y-3">
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center text-sm text-gray-600 mb-1">
+                                    <i class="fas fa-briefcase mr-2 text-indigo-500"></i>
+                                    <span class="font-medium">Position</span>
+                                </div>
+                                <p class="text-gray-800" th:text="${candidate.position ?: 'Candidate'}">President</p>
+                            </div>
+                            
+                            <div th:if="${candidate.profile}" class="bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center text-sm text-gray-600 mb-1">
+                                    <i class="fas fa-user-circle mr-2 text-indigo-500"></i>
+                                    <span class="font-medium">About</span>
+                                </div>
+                                <p class="text-gray-800 text-sm leading-relaxed" th:text="${#strings.abbreviate(candidate.profile, 100)}">
+                                    Experienced leader with vision for positive change...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Selection Indicator -->
+                        <div class="mt-4 text-center">
+                            <div class="w-8 h-8 border-2 border-gray-300 rounded-full mx-auto flex items-center justify-center">
+                                <i class="fas fa-check text-white text-sm hidden"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vote Confirmation Section -->
+            <div id="confirmationSection" class="hidden bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-check text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Your Selection</h3>
+                            <p class="text-gray-600">
+                                You have selected: <span class="font-semibold text-indigo-600" id="selectedCandidateName">Candidate Name</span>
+                                <span class="text-gray-500">(<span id="selectedCandidateParty">Party</span>)</span>
+                            </p>
+                        </div>
+                    </div>
+                    <button id="castVoteBtn" 
+                            onclick="confirmVote()" 
+                            disabled
+                            class="bg-gray-400 cursor-not-allowed text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50">
+                        <i class="fas fa-vote-yea mr-2"></i>
+                        Cast Vote
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden Form -->
+            <form id="voteForm" th:action="@{/voter/elections/{id}/vote(id=${election.id})}" method="post" style="display: none;">
+                <input type="hidden" id="selectedCandidateId" name="candidateId" value="">
+            </form>
+        </main>
+    </div>
+
+    <!-- Vote Confirmation Modal -->
+    <div id="voteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-scale-in">
+            <div class="p-8 text-center">
+                <!-- Success Icon -->
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-vote-yea text-green-600 text-2xl"></i>
+                </div>
+
+                <!-- Modal Content -->
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Confirm Your Vote</h2>
+                <p class="text-gray-600 mb-6">
+                    You are about to cast your vote for <span class="font-semibold text-indigo-600" id="modalCandidateName">Candidate Name</span>.
+                    This action cannot be undone.
+                </p>
+
+                <!-- Modal Actions -->
+                <div class="flex space-x-4">
+                    <button onclick="hideVoteModal()" 
+                            class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium">
+                        Cancel
+                    </button>
+                    <button onclick="submitVote()" 
+                            class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-semibold">
+                        Confirm Vote
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scale-in {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .animate-scale-in {
+            animation: scale-in 0.2s ease-out;
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</body>
+</html>

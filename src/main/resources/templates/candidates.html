@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Candidates - Voting System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">VoteSystem</h2>
+                    <p class="text-xs text-indigo-300">Secure Voting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">John Doe</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">username</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/voter" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-tachometer-alt text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/profile" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span class="font-medium">My Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-all duration-200">
+                        <i class="fas fa-calendar-check text-lg"></i>
+                        <span class="font-medium">Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/vote" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span class="font-medium">Cast Vote</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/history" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-history text-lg"></i>
+                        <span class="font-medium">Vote History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/help" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-question-circle text-lg"></i>
+                        <span class="font-medium">Help & FAQ</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <a href="/voter/elections" class="text-indigo-600 hover:text-indigo-800 transition-colors">
+                            <i class="fas fa-arrow-left text-lg"></i>
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-800">Candidates</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell text-gray-600 text-lg cursor-pointer hover:text-indigo-600"></i>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Candidates Content -->
+        <main class="p-6">
+            <!-- Page Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Election Candidates</h2>
+                        <p class="text-indigo-100">Meet the candidates running in this election</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <i class="fas fa-users text-6xl text-indigo-200"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidates Grid -->
+            <div th:if="${#lists.isEmpty(candidates)}" class="text-center py-12">
+                <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-500 mb-2">No Candidates Available</h3>
+                <p class="text-gray-400">There are no candidates registered for this election yet.</p>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(candidates)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div th:each="candidate : ${candidates}" class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+                    
+                    <!-- Candidate Header -->
+                    <div class="bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-700 p-6 text-white">
+                        <div class="text-center">
+                            <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full mx-auto flex items-center justify-center mb-3">
+                                <i class="fas fa-user text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold" th:text="${candidate.name}">John Smith</h3>
+                            <p class="text-indigo-200 font-medium" th:text="${candidate.party ?: 'Independent'}">Democratic Party</p>
+                        </div>
+                    </div>
+
+                    <!-- Candidate Details -->
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div th:if="${candidate.position}" class="bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center text-sm text-gray-600 mb-1">
+                                    <i class="fas fa-briefcase mr-2 text-indigo-500"></i>
+                                    <span class="font-medium">Position</span>
+                                </div>
+                                <p class="text-gray-800" th:text="${candidate.position}">President</p>
+                            </div>
+                            
+                            <div th:if="${candidate.profile}" class="bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center text-sm text-gray-600 mb-1">
+                                    <i class="fas fa-user-circle mr-2 text-indigo-500"></i>
+                                    <span class="font-medium">About</span>
+                                </div>
+                                <p class="text-gray-800 text-sm leading-relaxed" th:text="${candidate.profile}">
+                                    Experienced leader with vision for positive change and commitment to serving the community.
+                                </p>
+                            </div>
+
+                            <div class="bg-blue-50 rounded-lg p-3">
+                                <div class="flex items-center text-sm text-blue-600 mb-1">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <span class="font-medium">Election Info</span>
+                                </div>
+                                <p class="text-blue-800 text-sm">Running for election position</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Elections Button -->
+            <div class="text-center mt-8">
+                <a href="/voter/elections" class="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Elections
+                </a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
