@@ -61,4 +61,23 @@ public class VoterService implements UserDetailsService {
         }
         return repo.findByUsernameContainingIgnoreCaseOrFullNameContainingIgnoreCase(query, query);
     }
+
+    public boolean changePassword(Long voterId, String currentPassword, String newPassword) {
+        Optional<Voter> voterOpt = repo.findById(voterId);
+        if (voterOpt.isEmpty()) {
+            return false;
+        }
+        
+        Voter voter = voterOpt.get();
+        
+        // Verify current password
+        if (!encoder.matches(currentPassword, voter.getPassword())) {
+            return false;
+        }
+        
+        // Set new password
+        voter.setPassword(encoder.encode(newPassword));
+        repo.save(voter);
+        return true;
+    }
 }

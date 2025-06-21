@@ -2,12 +2,15 @@ package com.udom.votingapplication.controllers;
 
 import com.udom.votingapplication.models.*;
 import com.udom.votingapplication.services.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -17,13 +20,15 @@ public class VoterController {
     private final CandidateService candidateService;
     private final VoteService voteService;
     private final ResultService resultService;
+    private final VoterService voterService;
 
     public VoterController(ElectionService electionService, CandidateService candidateService, 
-                          VoteService voteService, ResultService resultService) {
+                          VoteService voteService, ResultService resultService, VoterService voterService) {
         this.electionService = electionService;
         this.candidateService = candidateService;
         this.voteService = voteService;
         this.resultService = resultService;
+        this.voterService = voterService;
     }
 
     // Voter dashboard
@@ -253,6 +258,58 @@ public class VoterController {
     public String profile(Model model, @AuthenticationPrincipal Voter voter) {
         model.addAttribute("voter", voter);
         return "voter-profile";
+    }
+
+    // Change password endpoint
+    @PostMapping("/profile/change-password")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> changePassword(
+            @RequestBody Map<String, String> request,
+            @AuthenticationPrincipal Voter voter) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String currentPassword = request.get("currentPassword");
+            String newPassword = request.get("newPassword");
+            
+            // Validate input
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Current password is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (newPassword == null || newPassword.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "New password is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (newPassword.length() < 6) {
+                response.put("success", false);
+                response.put("message", "New password must be at least 6 characters long");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Attempt to change password
+            boolean success = voterService.changePassword(voter.getId(), currentPassword, newPassword);
+            
+            if (success) {
+                response.put("success", true);
+                response.put("message", "Password changed successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Current password is incorrect");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "An error occurred while changing password");
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     // General cast vote page (redirects to elections)
