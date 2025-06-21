@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -31,14 +32,46 @@ public class AdminController {
     // Admin dashboard
     @GetMapping("")
     public String dashboard(Model model, @AuthenticationPrincipal Admin admin) {
+        // Get all elections and calculate statuses
         List<Election> allElections = electionService.getAllElections();
+        
+        // Calculate status for each election
+        for (Election election : allElections) {
+            election.calculateStatus();
+        }
+        
+        // Calculate statistics
+        long totalElections = allElections.size();
         long activeElections = allElections.stream()
-            .filter(e -> e.getEndTime().isAfter(LocalDateTime.now()))
+            .filter(e -> "active".equals(e.getStatus()))
+            .count();
+        long completedElections = allElections.stream()
+            .filter(e -> "completed".equals(e.getStatus()))
+            .count();
+        long upcomingElections = allElections.stream()
+            .filter(e -> "upcoming".equals(e.getStatus()))
             .count();
         
-        model.addAttribute("totalElections", allElections.size());
+        // Get total voters
+        long totalVoters = voterService.getAllVoters().size();
+        
+        // Get total candidates
+        long totalCandidates = candidateService.getAllCandidates().size();
+        
+        // Get recent elections (last 5, sorted by creation/start time)
+        List<Election> recentElections = allElections.stream()
+            .sorted((e1, e2) -> e2.getStartTime().compareTo(e1.getStartTime()))
+            .limit(5)
+            .collect(Collectors.toList());
+        
+        // Add attributes to model
+        model.addAttribute("totalElections", totalElections);
         model.addAttribute("activeElections", activeElections);
-        model.addAttribute("completedElections", allElections.size() - activeElections);
+        model.addAttribute("completedElections", completedElections);
+        model.addAttribute("upcomingElections", upcomingElections);
+        model.addAttribute("totalVoters", totalVoters);
+        model.addAttribute("totalCandidates", totalCandidates);
+        model.addAttribute("recentElections", recentElections);
         
         return "admin/dashboard";
     }
