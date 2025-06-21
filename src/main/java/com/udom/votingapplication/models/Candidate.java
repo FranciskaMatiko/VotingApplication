@@ -35,4 +35,9 @@ public class Candidate {
     public void setElection(Election election) { this.election = election; }
     public List<Vote> getVotes() { return votes; }
     public void setVotes(List<Vote> votes) { this.votes = votes; }
+    
+    // Transient method to get vote count
+    public int getVoteCount() {
+        return votes != null ? votes.size() : 0;
+    }
 }

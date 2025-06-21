@@ -156,4 +156,20 @@ public class AdminController {
         model.addAttribute("elections", elections);
         return "admin/results";
     }
+
+    // View candidates for a specific election
+    @GetMapping("/elections/{electionId}/candidates")
+    public String viewElectionCandidates(@PathVariable Long electionId, Model model) {
+        Election election = electionService.getElection(electionId)
+            .orElseThrow(() -> new RuntimeException("Election not found"));
+        List<Candidate> candidates = candidateService.getCandidatesByElection(election);
+        List<Election> allElections = electionService.getAllElections();
+        
+        model.addAttribute("candidates", candidates);
+        model.addAttribute("elections", allElections);
+        model.addAttribute("selectedElection", election);
+        model.addAttribute("isElectionView", true);
+        
+        return "admin/candidates";
+    }
 }
