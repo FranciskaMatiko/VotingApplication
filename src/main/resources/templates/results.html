@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Results - Voting System</title>
+    <title>Election Results - Voting System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
@@ -48,6 +48,216 @@
 
         <!-- Navigation Menu -->
         <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/voter" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-tachometer-alt text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/profile" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span class="font-medium">My Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/elections" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-calendar-check text-lg"></i>
+                        <span class="font-medium">Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/vote" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span class="font-medium">Cast Vote</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/results" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-all duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/history" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-history text-lg"></i>
+                        <span class="font-medium">Vote History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/voter/help" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
+                        <i class="fas fa-question-circle text-lg"></i>
+                        <span class="font-medium">Help & FAQ</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-bars text-gray-600"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gray-800">Election Results</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell text-gray-600 text-lg cursor-pointer hover:text-indigo-600"></i>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Results Content -->
+        <main class="p-6">
+            <!-- Page Header -->
+            <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-8 text-white mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Election Results</h2>
+                        <p class="text-green-100">View the outcomes of completed elections and see how democracy works!</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <i class="fas fa-chart-bar text-6xl text-green-200"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Total Elections</h3>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${totalElections}">12</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Completed</h3>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${completedElections}">8</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-eye text-purple-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Results Available</h3>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${resultsAvailable}">6</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-vote-yea text-indigo-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Your Votes</h3>
+                            <p class="text-2xl font-bold text-gray-900" th:text="${votedElections}">5</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Grid -->
+            <div th:if="${#lists.isEmpty(electionResults)}" class="text-center py-12">
+                <div class="max-w-md mx-auto">
+                    <i class="fas fa-chart-bar text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No Results Available</h3>
+                    <p class="text-gray-500">There are currently no election results available for viewing. Results will appear here once elections are completed and results are published.</p>
+                </div>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(electionResults)}" class="space-y-6">
+                <!-- Election Results Cards -->
+                <div th:each="result : ${electionResults}" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-6">
+                        <!-- Election Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900" th:text="${result.electionName}">Student Council Election</h3>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Completed
+                                    </span>
+                                    <span class="text-sm text-gray-500">
+                                        <i class="fas fa-users mr-1"></i>
+                                        <span th:text="${result.totalVotes}">245</span> votes cast
+                                    </span>
+                                    <span class="text-sm text-gray-500">
+                                        <i class="fas fa-user-friends mr-1"></i>
+                                        <span th:text="${result.totalCandidates}">5</span> candidates
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <a th:href="@{/voter/elections/{id}/results(id=${result.electionId})}" 
+                                   class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-sm font-medium inline-flex items-center">
+                                    <i class="fas fa-chart-bar mr-2"></i>
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-gray-900" th:text="${result.totalVotes}">245</p>
+                                <p class="text-xs text-gray-500">Total Votes</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-gray-900" th:text="${#numbers.formatDecimal(result.totalVotes * 100.0 / result.totalEligibleVoters, 1, 1)} + '%'">68.1%</p>
+                                <p class="text-xs text-gray-500">Turnout</p>
+                            </div>
+                            <div class="text-center" th:if="${result.winner != null}">
+                                <p class="text-lg font-bold text-green-600" th:text="${result.winner.name}">John Smith</p>
+                                <p class="text-xs text-gray-500">Winner</p>
+                            </div>
+                            <div class="text-center" th:if="${result.winner == null}">
+                                <p class="text-lg font-bold text-gray-400">No Winner</p>
+                                <p class="text-xs text-gray-500">Tie/No Votes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
             <ul class="space-y-2 px-4">
                 <li>
                     <a href="/voter" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">

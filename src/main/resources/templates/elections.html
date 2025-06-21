@@ -166,22 +166,22 @@
             <!-- Elections Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 <!-- Election Card Template -->
-                <div th:each="election : ${elections}" class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    <!-- Election Header with Gradient -->
+                <div th:each="election : ${elections}" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300">
+                    <!-- Election Header -->
                     <div class="relative">
                         <div class="absolute top-4 right-4 z-10">
                             <span th:if="${election.status == 'active'}" 
-                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                                 <i class="fas fa-circle mr-1 text-green-500"></i>
-                                Live
+                                Active
                             </span>
                             <span th:if="${election.status == 'completed'}" 
-                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                                 <i class="fas fa-check-circle mr-1"></i>
                                 Completed
                             </span>
                             <span th:if="${election.status == 'upcoming'}" 
-                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                                 <i class="fas fa-clock mr-1"></i>
                                 Upcoming
                             </span>
@@ -189,29 +189,29 @@
                         
                         <!-- Voting Status Badge -->
                         <div th:if="${election.status == 'active' && election.voterHasVoted}" class="absolute top-4 left-4 z-10">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 text-white">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white">
                                 <i class="fas fa-check mr-1"></i>
-                                You Voted
+                                Voted
                             </span>
                         </div>
                         
-                        <div class="h-40 bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-700 relative overflow-hidden">
+                        <div class="h-32 bg-gradient-to-r from-gray-100 to-gray-200 relative overflow-hidden">
                             <!-- Background Pattern -->
-                            <div class="absolute inset-0 opacity-20">
-                                <div class="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
-                                <div class="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-full translate-x-12 translate-y-12"></div>
+                            <div class="absolute inset-0 opacity-30">
+                                <div class="absolute top-0 left-0 w-20 h-20 bg-gray-300 rounded-full -translate-x-10 -translate-y-10"></div>
+                                <div class="absolute bottom-0 right-0 w-16 h-16 bg-gray-300 rounded-full translate-x-8 translate-y-8"></div>
                             </div>
                             
                             <!-- Election Icon -->
                             <div class="absolute bottom-4 left-4">
-                                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-vote-yea text-white text-xl"></i>
+                                <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-vote-yea text-gray-600 text-lg"></i>
                                 </div>
                             </div>
                             
                             <!-- Candidates Count Badge -->
                             <div class="absolute bottom-4 right-4">
-                                <div class="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm">
+                                <div class="bg-white bg-opacity-90 text-gray-700 px-3 py-1 rounded-full text-sm">
                                     <i class="fas fa-users mr-1"></i>
                                     <span th:text="${election.candidates.size()}">5</span> candidates
                                 </div>
@@ -277,21 +277,21 @@
                             <!-- Primary Action Button -->
                             <div th:if="${election.status == 'active' && !election.voterHasVoted}">
                                 <a th:href="@{/voter/elections/{id}/vote(id=${election.id})}" 
-                                   class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-3 px-4 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:scale-105 inline-block">
+                                   class="w-full bg-indigo-600 text-white text-center py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold inline-block">
                                     <i class="fas fa-vote-yea mr-2"></i>
                                     Cast Your Vote
                                 </a>
                             </div>
                             
                             <div th:if="${election.status == 'active' && election.voterHasVoted}">
-                                <div class="w-full bg-green-100 text-green-800 text-center py-3 px-4 rounded-lg font-semibold border-2 border-green-200">
+                                <div class="w-full bg-green-50 text-green-700 text-center py-3 px-4 rounded-lg font-semibold border border-green-200">
                                     <i class="fas fa-check-circle mr-2"></i>
                                     Vote Successfully Cast
                                 </div>
                             </div>
                             
                             <div th:if="${election.status == 'upcoming'}">
-                                <div class="w-full bg-yellow-50 text-yellow-800 text-center py-3 px-4 rounded-lg font-semibold border-2 border-yellow-200">
+                                <div class="w-full bg-yellow-50 text-yellow-700 text-center py-3 px-4 rounded-lg font-semibold border border-yellow-200">
                                     <i class="fas fa-clock mr-2"></i>
                                     Voting Not Started
                                 </div>
@@ -307,7 +307,7 @@
                                 
                                 <a th:if="${election.status == 'completed' && election.resultsVisible}" 
                                    th:href="@{/voter/elections/{id}/results(id=${election.id})}" 
-                                   class="bg-purple-100 text-purple-700 text-center py-2 px-4 rounded-lg hover:bg-purple-200 transition-colors duration-200 text-sm font-medium">
+                                   class="bg-gray-100 text-gray-700 text-center py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium">
                                     <i class="fas fa-chart-bar mr-1"></i>
                                     Results
                                 </a>
@@ -331,13 +331,6 @@
                         <p class="text-gray-500">There are currently no elections available. Check back later for upcoming elections.</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Load More Button (for pagination) -->
-            <div th:if="${not #lists.isEmpty(elections)}" class="text-center mt-8">
-                <button class="bg-white text-gray-700 border border-gray-300 py-2 px-6 rounded-lg hover:bg-gray-50 transition font-medium">
-                    Load More Elections
-                </button>
             </div>
         </main>
     </div>

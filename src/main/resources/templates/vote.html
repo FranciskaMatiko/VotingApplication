@@ -19,21 +19,24 @@
             const candidateId = element.getAttribute('data-candidate-id');
             const candidateName = element.getAttribute('data-candidate-name');
             const candidateParty = element.getAttribute('data-candidate-party');
+            const candidatePosition = element.getAttribute('data-candidate-position');
             
-            selectCandidate(candidateId, candidateName, candidateParty);
+            selectCandidate(candidateId, candidateName, candidateParty, candidatePosition);
         }
 
-        function selectCandidate(candidateId, candidateName, candidateParty) {
+        function selectCandidate(candidateId, candidateName, candidateParty, candidatePosition) {
             // Remove previous selection
             document.querySelectorAll('.candidate-card').forEach(card => {
-                card.classList.remove('ring-4', 'ring-indigo-500', 'bg-indigo-50');
+                card.classList.remove('ring-2', 'ring-indigo-500', 'bg-gray-50');
                 card.classList.add('bg-white');
+                card.querySelector('.selection-indicator').classList.add('hidden');
             });
 
             // Add selection to clicked card
             const selectedCard = document.getElementById('candidate-' + candidateId);
-            selectedCard.classList.add('ring-4', 'ring-indigo-500', 'bg-indigo-50');
+            selectedCard.classList.add('ring-2', 'ring-indigo-500', 'bg-gray-50');
             selectedCard.classList.remove('bg-white');
+            selectedCard.querySelector('.selection-indicator').classList.remove('hidden');
 
             // Update selected candidate
             selectedCandidate = candidateId;
@@ -42,12 +45,22 @@
             document.getElementById('confirmationSection').classList.remove('hidden');
             document.getElementById('selectedCandidateName').textContent = candidateName;
             document.getElementById('selectedCandidateParty').textContent = candidateParty || 'Independent';
+            document.getElementById('selectedCandidatePosition').textContent = candidatePosition || 'Candidate';
             document.getElementById('selectedCandidateId').value = candidateId;
 
             // Enable vote button
             document.getElementById('castVoteBtn').disabled = false;
             document.getElementById('castVoteBtn').classList.remove('bg-gray-400', 'cursor-not-allowed');
-            document.getElementById('castVoteBtn').classList.add('bg-gradient-to-r', 'from-green-600', 'to-emerald-600', 'hover:from-green-700', 'hover:to-emerald-700');
+            document.getElementById('castVoteBtn').classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+        }
+
+        function showCustomAlert(message) {
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('alertModal').classList.remove('hidden');
+        }
+
+        function hideCustomAlert() {
+            document.getElementById('alertModal').classList.add('hidden');
         }
 
         function confirmVote() {
@@ -245,12 +258,12 @@
             </div>
 
             <!-- Voting Instructions -->
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
+            <div class="bg-gray-50 border-l-4 border-gray-400 p-4 mb-8">
                 <div class="flex">
-                    <i class="fas fa-info-circle text-blue-400 mt-1 mr-3"></i>
+                    <i class="fas fa-info-circle text-gray-500 mt-1 mr-3"></i>
                     <div>
-                        <h3 class="text-blue-800 font-semibold mb-1">Voting Instructions</h3>
-                        <p class="text-blue-700 text-sm">
+                        <h3 class="text-gray-800 font-semibold mb-1">Voting Instructions</h3>
+                        <p class="text-gray-600 text-sm">
                             Select one candidate by clicking on their card. Review your choice carefully before submitting your vote. 
                             <strong>Once submitted, your vote cannot be changed.</strong>
                         </p>
@@ -271,47 +284,39 @@
                 <div th:if="${!#lists.isEmpty(candidates)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div th:each="candidate : ${candidates}" 
                          th:id="'candidate-' + ${candidate.id}"
-                         class="candidate-card bg-white rounded-xl shadow-md border-2 border-gray-200 p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
+                         class="candidate-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer transition-all duration-300 hover:shadow-md hover:border-gray-300 relative"
                          th:data-candidate-id="${candidate.id}"
                          th:data-candidate-name="${candidate.name}"
                          th:data-candidate-party="${candidate.party}"
+                         th:data-candidate-position="${candidate.position}"
                          onclick="selectCandidateFromData(this)">
+                        
+                        <!-- Selection Indicator -->
+                        <div class="selection-indicator hidden absolute top-4 right-4">
+                            <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-white text-sm"></i>
+                            </div>
+                        </div>
                         
                         <!-- Candidate Avatar -->
                         <div class="text-center mb-4">
-                            <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full mx-auto flex items-center justify-center mb-3">
-                                <i class="fas fa-user text-white text-2xl"></i>
+                            <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-3 border-2 border-gray-200">
+                                <i class="fas fa-user text-gray-600 text-xl"></i>
                             </div>
-                            <h4 class="text-lg font-bold text-gray-900" th:text="${candidate.name}">John Smith</h4>
-                            <p class="text-sm text-indigo-600 font-medium" th:text="${candidate.party ?: 'Independent'}">Democratic Party</p>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-1" th:text="${candidate.name}">John Smith</h4>
+                            <p class="text-sm text-gray-600 mb-2" th:text="${candidate.position ?: 'Candidate'}">President</p>
+                            <p class="text-xs text-gray-500" th:text="${candidate.party ?: 'Independent'}">Democratic Party</p>
                         </div>
 
                         <!-- Candidate Details -->
-                        <div class="space-y-3">
-                            <div class="bg-gray-50 rounded-lg p-3">
-                                <div class="flex items-center text-sm text-gray-600 mb-1">
-                                    <i class="fas fa-briefcase mr-2 text-indigo-500"></i>
-                                    <span class="font-medium">Position</span>
-                                </div>
-                                <p class="text-gray-800" th:text="${candidate.position ?: 'Candidate'}">President</p>
+                        <div th:if="${candidate.profile}" class="bg-gray-50 rounded-md p-3 mt-4">
+                            <div class="flex items-center text-xs text-gray-500 mb-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <span>About</span>
                             </div>
-                            
-                            <div th:if="${candidate.profile}" class="bg-gray-50 rounded-lg p-3">
-                                <div class="flex items-center text-sm text-gray-600 mb-1">
-                                    <i class="fas fa-user-circle mr-2 text-indigo-500"></i>
-                                    <span class="font-medium">About</span>
-                                </div>
-                                <p class="text-gray-800 text-sm leading-relaxed" th:text="${#strings.abbreviate(candidate.profile, 100)}">
-                                    Experienced leader with vision for positive change...
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Selection Indicator -->
-                        <div class="mt-4 text-center">
-                            <div class="w-8 h-8 border-2 border-gray-300 rounded-full mx-auto flex items-center justify-center">
-                                <i class="fas fa-check text-white text-sm hidden"></i>
-                            </div>
+                            <p class="text-gray-700 text-sm leading-relaxed" th:text="${#strings.abbreviate(candidate.profile, 80)}">
+                                Experienced leader with vision for positive change...
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -327,8 +332,11 @@
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900">Your Selection</h3>
                             <p class="text-gray-600">
-                                You have selected: <span class="font-semibold text-indigo-600" id="selectedCandidateName">Candidate Name</span>
-                                <span class="text-gray-500">(<span id="selectedCandidateParty">Party</span>)</span>
+                                <span class="font-semibold text-indigo-600" id="selectedCandidateName">Candidate Name</span> 
+                                <span class="text-gray-500">for <span id="selectedCandidatePosition">Position</span></span>
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                Party: <span id="selectedCandidateParty">Party</span>
                             </p>
                         </div>
                     </div>
@@ -360,8 +368,15 @@
 
                 <!-- Modal Content -->
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Confirm Your Vote</h2>
-                <p class="text-gray-600 mb-6">
-                    You are about to cast your vote for <span class="font-semibold text-indigo-600" id="modalCandidateName">Candidate Name</span>.
+                <p class="text-gray-600 mb-2">
+                    You are about to cast your vote for:
+                </p>
+                <div class="text-center mb-6 p-4 bg-gray-50 rounded-lg">
+                    <p class="font-bold text-indigo-600 text-lg" id="modalCandidateName">Candidate Name</p>
+                    <p class="text-gray-600">for <span id="modalCandidatePosition">Position</span></p>
+                </div>
+                <p class="text-sm text-red-600 mb-6">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
                     This action cannot be undone.
                 </p>
 
@@ -372,10 +387,32 @@
                         Cancel
                     </button>
                     <button onclick="submitVote()" 
-                            class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-semibold">
+                            class="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold">
                         Confirm Vote
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 animate-scale-in">
+            <div class="p-6 text-center">
+                <!-- Alert Icon -->
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                </div>
+
+                <!-- Alert Content -->
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Alert</h3>
+                <p class="text-gray-600 mb-6" id="alertMessage">Alert message goes here</p>
+
+                <!-- Alert Actions -->
+                <button onclick="hideCustomAlert()" 
+                        class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
+                    OK
+                </button>
             </div>
         </div>
     </div>

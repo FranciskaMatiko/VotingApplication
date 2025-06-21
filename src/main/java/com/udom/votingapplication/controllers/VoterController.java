@@ -16,11 +16,14 @@ public class VoterController {
     private final ElectionService electionService;
     private final CandidateService candidateService;
     private final VoteService voteService;
+    private final ResultService resultService;
 
-    public VoterController(ElectionService electionService, CandidateService candidateService, VoteService voteService) {
+    public VoterController(ElectionService electionService, CandidateService candidateService, 
+                          VoteService voteService, ResultService resultService) {
         this.electionService = electionService;
         this.candidateService = candidateService;
         this.voteService = voteService;
+        this.resultService = resultService;
     }
 
     // Voter dashboard
@@ -178,18 +181,71 @@ public class VoterController {
         return "confirmation";
     }
 
-    // View results
-    @GetMapping("/elections/{electionId}/results")
-    public String results(@PathVariable Long electionId, Model model) {
-        Election election = electionService.getElection(electionId).orElseThrow();
-        if (!election.isResultsVisible()) {
-            model.addAttribute("message", "Results are not available yet.");
-            return "results";
-        }
-        List<Candidate> candidates = candidateService.getCandidatesByElection(electionId);
-        model.addAttribute("candidates", candidates);
-        model.addAttribute("election", election);
+    // View all results
+    @GetMapping("/results")
+    public String allResults(Model model, @AuthenticationPrincipal Voter voter) {
+        List<Election> allElections = electionService.getAllElections();
+        
+        // Filter elections with visible results
+        List<Election> electionsWithResults = allElections.stream()
+            .filter(election -> {
+                election.calculateStatus();
+                return election.isResultsVisible() && "completed".equals(election.getStatus());
+            })
+            .collect(Collectors.toList());
+        
+        // Get election results with statistics
+        List<ElectionResult> electionResults = electionsWithResults.stream()
+            .map(election -> resultService.getElectionResult(election))
+            .collect(Collectors.toList());
+        
+        // Count statistics for dashboard
+        long totalElections = allElections.size();
+        long completedElections = allElections.stream()
+            .filter(e -> {
+                e.calculateStatus();
+                return "completed".equals(e.getStatus());
+            })
+            .count();
+        long votedElections = allElections.stream()
+            .filter(e -> voteService.hasVoted(voter.getId(), e.getId()))
+            .count();
+        
+        model.addAttribute("electionResults", electionResults);
+        model.addAttribute("electionsWithResults", electionsWithResults);
+        model.addAttribute("totalElections", totalElections);
+        model.addAttribute("completedElections", completedElections);
+        model.addAttribute("votedElections", votedElections);
+        model.addAttribute("resultsAvailable", electionsWithResults.size());
+        
         return "results";
+    }
+
+    // View results for specific election
+    @GetMapping("/elections/{electionId}/results")
+    public String electionResults(@PathVariable Long electionId, Model model, @AuthenticationPrincipal Voter voter) {
+        Election election = electionService.getElection(electionId).orElseThrow();
+        election.calculateStatus();
+        
+        if (!election.isResultsVisible() || !"completed".equals(election.getStatus())) {
+            model.addAttribute("message", "Results are not available yet for this election.");
+            model.addAttribute("election", election);
+            return "election-results";
+        }
+        
+        // Get detailed candidate results
+        List<CandidateResult> candidateResults = resultService.getCandidateResults(electionId);
+        ElectionResult electionResult = resultService.getElectionResult(election);
+        
+        // Check if voter voted in this election
+        boolean voterVoted = voteService.hasVoted(voter.getId(), electionId);
+        
+        model.addAttribute("election", election);
+        model.addAttribute("candidateResults", candidateResults);
+        model.addAttribute("electionResult", electionResult);
+        model.addAttribute("voterVoted", voterVoted);
+        
+        return "election-results";
     }
 
     // Voter profile page
