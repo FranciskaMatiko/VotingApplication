@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${election.id != null ? 'Edit Election' : 'Create New Election'} + ' - Admin Panel'">Create Election - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Set minimum datetime to now
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const isoString = now.toISOString().slice(0, 16);
+            
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+            
+            startTimeInput.min = isoString;
+            endTimeInput.min = isoString;
+            
+            // Ensure end time is after start time
+            startTimeInput.addEventListener('change', function() {
+                endTimeInput.min = this.value;
+                if (endTimeInput.value && endTimeInput.value <= this.value) {
+                    const startDate = new Date(this.value);
+                    startDate.setHours(startDate.getHours() + 1);
+                    endTimeInput.value = startDate.toISOString().slice(0, 16);
+                }
+            });
+        });
+
+        function validateForm() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            if (new Date(startTime) >= new Date(endTime)) {
+                alert('End time must be after start time');
+                return false;
+            }
+            
+            return true;
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Admin Panel</h2>
+                    <p class="text-xs text-indigo-300">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">Admin User</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/admin" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-pie text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-colors duration-200">
+                        <i class="fas fa-vote-yea text-lg"></i>
+                        <span class="font-medium">Manage Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/candidates" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-users text-lg"></i>
+                        <span class="font-medium">Manage Candidates</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/voters" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-user-friends text-lg"></i>
+                        <span class="font-medium">Manage Voters</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">View Results</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-white shadow-sm border-b p-4 flex items-center justify-between">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800" th:text="${election.id != null ? 'Edit Election' : 'Create Election'}">Create Election</h1>
+            <div class="w-6"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900" th:text="${election.id != null ? 'Edit Election' : 'Create New Election'}">Create New Election</h1>
+                    <p class="text-gray-600 mt-1" th:text="${election.id != null ? 'Update election details and settings' : 'Set up a new election with candidates and schedule'}">Set up a new election with candidates and schedule</p>
+                </div>
+                <a href="/admin/elections" class="text-gray-600 hover:text-gray-900 font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Elections
+                </a>
+            </div>
+        </div>
+
+        <!-- Election Form -->
+        <div class="p-6">
+            <div class="max-w-4xl mx-auto">
+                <form th:action="${election.id != null ? '/admin/elections/' + election.id : '/admin/elections'}" th:object="${election}" method="post" onsubmit="return validateForm()" class="bg-white rounded-xl shadow-lg p-8">
+                    
+                    <!-- Basic Information -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-info-circle text-red-600 mr-3"></i>
+                            Basic Information
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Election Title -->
+                            <div class="lg:col-span-2">
+                                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Election Title <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="title" th:field="*{title}" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
+                                       placeholder="Enter election title (e.g., Student Council Election 2024)">
+                            </div>
+
+                            <!-- Election Description -->
+                            <div class="lg:col-span-2">
+                                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Description <span class="text-red-500">*</span>
+                                </label>
+                                <textarea id="description" th:field="*{description}" required rows="4"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
+                                          placeholder="Describe the purpose and scope of this election..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-calendar-alt text-red-600 mr-3"></i>
+                            Election Schedule
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Start Time -->
+                            <div>
+                                <label for="startTime" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Start Time <span class="text-red-500">*</span>
+                                </label>
+                                <input type="datetime-local" id="startTime" th:field="*{startTime}" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200">
+                                <p class="text-sm text-gray-500 mt-1">When voting will begin</p>
+                            </div>
+
+                            <!-- End Time -->
+                            <div>
+                                <label for="endTime" class="block text-sm font-medium text-gray-700 mb-2">
+                                    End Time <span class="text-red-500">*</span>
+                                </label>
+                                <input type="datetime-local" id="endTime" th:field="*{endTime}" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200">
+                                <p class="text-sm text-gray-500 mt-1">When voting will end</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Election Settings -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-cog text-red-600 mr-3"></i>
+                            Election Settings
+                        </h2>
+                        
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- Voting Type -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Voting Type</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="votingType" value="single" checked class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
+                                            <span class="ml-3 text-sm text-gray-700">Single Choice - Voters can select one candidate</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="votingType" value="multiple" disabled class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
+                                            <span class="ml-3 text-sm text-gray-500">Multiple Choice - Coming soon</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Results Visibility</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="resultsVisibility" value="after_voting" checked class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
+                                            <span class="ml-3 text-sm text-gray-700">Show results after election ends</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="resultsVisibility" value="real_time" disabled class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
+                                            <span class="ml-3 text-sm text-gray-500">Real-time results - Coming soon</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                        <a href="/admin/elections" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                        
+                        <div class="flex items-center space-x-4">
+                            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <i th:class="${election.id != null ? 'fas fa-save' : 'fas fa-plus'}" class="mr-2"></i>
+                                <span th:text="${election.id != null ? 'Update Election' : 'Create Election'}">Create Election</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Next Steps Info -->
+                <div th:if="${election.id == null}" class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-2">Next Steps</h3>
+                            <ul class="text-blue-800 space-y-1">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    After creating the election, you'll be able to add candidates
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    The election will appear in the voter's elections list
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-blue-600 mr-2"></i>
+                                    You can edit election details anytime before it starts
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

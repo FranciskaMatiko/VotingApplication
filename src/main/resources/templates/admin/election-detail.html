@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${election.name} + ' - Admin Panel'">Election Details - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function confirmDelete(electionName) {
+            return confirm(`Are you sure you want to delete the election "${electionName}"? This action cannot be undone.`);
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-red-900 via-red-800 to-orange-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-red-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Admin Panel</h2>
+                    <p class="text-xs text-red-300">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Profile Section -->
+        <div class="p-4 border-b border-red-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">Admin User</p>
+                    <p class="text-xs text-red-300" sec:authentication="name">admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/admin" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-red-700 text-yellow-300 transition-colors duration-200">
+                        <i class="fas fa-vote-yea w-5"></i>
+                        <span>Manage Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/candidates" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Manage Candidates</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/voters" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-user-friends w-5"></i>
+                        <span>Manage Voters</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-chart-bar w-5"></i>
+                        <span>View Results</span>
+                    </a>
+                </li>
+                <li class="pt-4 border-t border-red-700">
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-700 transition-colors duration-200 w-full text-left">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-white shadow-sm border-b p-4 flex items-center justify-between">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800">Election Details</h1>
+            <div class="w-6"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900" th:text="${election.name}">Election Title</h1>
+                    <p class="text-gray-600 mt-1">Detailed view and management</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="/admin/elections" class="text-gray-600 hover:text-gray-900 font-medium">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Elections
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Election Details -->
+        <div class="p-6">
+            <div class="max-w-6xl mx-auto">
+                
+                <!-- Status and Actions Bar -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <div class="flex items-center justify-between">
+                        <!-- Status -->
+                        <div class="flex items-center space-x-4">
+                            <div th:if="${election.endTime.isBefore(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Completed
+                            </div>
+                            <div th:if="${election.startTime.isAfter(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-clock mr-2"></i>
+                                Upcoming
+                            </div>
+                            <div th:if="${election.startTime.isBefore(T(java.time.LocalDateTime).now()) && election.endTime.isAfter(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-play mr-2"></i>
+                                Active
+                            </div>
+                            
+                            <div class="text-sm text-gray-600">
+                                <span class="font-medium" th:text="${candidates.size()}">0</span> candidates
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center space-x-3">
+                            <a th:href="@{/admin/elections/{id}/edit(id=${election.id})}" class="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors duration-200">
+                                <i class="fas fa-edit mr-2"></i>
+                                Edit Election
+                            </a>
+                            <form th:action="@{/admin/elections/{id}/delete(id=${election.id})}" method="post" class="inline" th:onsubmit="return confirmDelete([[${election.name}]])">
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Delete Election
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Election Information -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-info-circle text-red-600 mr-3"></i>
+                                Election Information
+                            </h2>
+                            
+                            <div class="space-y-6">
+                                <!-- Description -->
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                                    <p class="text-gray-900 bg-gray-50 p-4 rounded-lg" th:text="${election.description}">Election description will appear here</p>
+                                </div>
+
+                                <!-- Schedule -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h3 class="text-sm font-medium text-gray-700 mb-2">Start Time</h3>
+                                        <div class="flex items-center text-green-600 bg-green-50 p-3 rounded-lg">
+                                            <i class="fas fa-play-circle mr-2"></i>
+                                            <span th:text="${#temporals.format(election.startTime, 'EEEE, MMMM dd, yyyy')}">Start Date</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600 mt-1" th:text="${#temporals.format(election.startTime, 'HH:mm')}">Start Time</div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 class="text-sm font-medium text-gray-700 mb-2">End Time</h3>
+                                        <div class="flex items-center text-red-600 bg-red-50 p-3 rounded-lg">
+                                            <i class="fas fa-stop-circle mr-2"></i>
+                                            <span th:text="${#temporals.format(election.endTime, 'EEEE, MMMM dd, yyyy')}">End Date</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600 mt-1" th:text="${#temporals.format(election.endTime, 'HH:mm')}">End Time</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Candidates Section -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                                    <i class="fas fa-users text-red-600 mr-3"></i>
+                                    Candidates (<span th:text="${candidates.size()}">0</span>)
+                                </h2>
+                                <a href="#" class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Add Candidate
+                                </a>
+                            </div>
+
+                            <div th:if="${candidates.empty}" class="text-center py-12">
+                                <div class="text-gray-400 mb-4">
+                                    <i class="fas fa-users text-4xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-600 mb-2">No Candidates Yet</h3>
+                                <p class="text-gray-500 mb-4">Add candidates to make this election available for voting</p>
+                                <a href="#" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Add First Candidate
+                                </a>
+                            </div>
+
+                            <div th:unless="${candidates.empty}" class="space-y-4">
+                                <div th:each="candidate : ${candidates}" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-semibold text-gray-900" th:text="${candidate.name}">Candidate Name</h3>
+                                                <p class="text-sm text-gray-600" th:text="${candidate.party}">Party/Position</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors duration-200">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div th:if="${candidate.description}" class="mt-3 text-sm text-gray-600" th:text="${candidate.description}">
+                                        Candidate description
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="space-y-6">
+                        
+                        <!-- Quick Stats -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Total Candidates</span>
+                                    <span class="font-semibold text-gray-900" th:text="${candidates.size()}">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Total Votes</span>
+                                    <span class="font-semibold text-gray-900">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Participation Rate</span>
+                                    <span class="font-semibold text-gray-900">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Election Timeline -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Election Created</p>
+                                        <p class="text-xs text-gray-500">Setup completed</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3" th:if="${!candidates.empty}">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Candidates Added</p>
+                                        <p class="text-xs text-gray-500" th:text="${candidates.size()} + ' candidates registered'">Candidates registered</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div th:if="${election.startTime.isAfter(T(java.time.LocalDateTime).now())}" class="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                                    <div th:if="${election.startTime.isBefore(T(java.time.LocalDateTime).now())}" class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Voting Period</p>
+                                        <p class="text-xs text-gray-500" th:text="${#temporals.format(election.startTime, 'MMM dd')} + ' - ' + ${#temporals.format(election.endTime, 'MMM dd')}">Voting dates</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <a href="#" class="block w-full text-center px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors duration-200">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Add Candidate
+                                </a>
+                                <a href="#" class="block w-full text-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                                    <i class="fas fa-chart-bar mr-2"></i>
+                                    View Results
+                                </a>
+                                <a href="#" class="block w-full text-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Export Data
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

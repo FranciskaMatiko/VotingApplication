@@ -61,6 +61,37 @@ public class AdminController {
         return "redirect:/admin/elections?success";
     }
 
+    @GetMapping("/elections/{id}/edit")
+    public String editElection(@PathVariable Long id, Model model) {
+        Election election = electionService.getElection(id)
+            .orElseThrow(() -> new RuntimeException("Election not found"));
+        model.addAttribute("election", election);
+        return "admin/election-form";
+    }
+
+    @PostMapping("/elections/{id}")
+    public String updateElection(@PathVariable Long id, @ModelAttribute Election election) {
+        election.setId(id);
+        electionService.saveElection(election);
+        return "redirect:/admin/elections?updated";
+    }
+
+    @PostMapping("/elections/{id}/delete")
+    public String deleteElection(@PathVariable Long id) {
+        electionService.deleteElection(id);
+        return "redirect:/admin/elections?deleted";
+    }
+
+    @GetMapping("/elections/{id}")
+    public String viewElection(@PathVariable Long id, Model model) {
+        Election election = electionService.getElection(id)
+            .orElseThrow(() -> new RuntimeException("Election not found"));
+        List<Candidate> candidates = candidateService.getCandidatesByElection(election);
+        model.addAttribute("election", election);
+        model.addAttribute("candidates", candidates);
+        return "admin/election-detail";
+    }
+
     // Manage Voters
     @GetMapping("/voters")
     public String manageVoters(Model model) {

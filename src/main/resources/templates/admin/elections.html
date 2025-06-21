@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Elections - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function confirmDelete(electionName) {
+            return confirm(`Are you sure you want to delete the election "${electionName}"? This action cannot be undone.`);
+        }
+
+        // Show success/error messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success')) {
+                showMessage('Election created successfully!', 'success');
+            } else if (urlParams.has('updated')) {
+                showMessage('Election updated successfully!', 'success');
+            } else if (urlParams.has('deleted')) {
+                showMessage('Election deleted successfully!', 'success');
+            }
+        });
+
+        function showMessage(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            alertDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Admin Panel</h2>
+                    <p class="text-xs text-indigo-300">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">Admin User</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/admin" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-pie text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-colors duration-200">
+                        <i class="fas fa-vote-yea text-lg"></i>
+                        <span class="font-medium">Manage Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/candidates" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-users text-lg"></i>
+                        <span class="font-medium">Manage Candidates</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/voters" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-user-friends text-lg"></i>
+                        <span class="font-medium">Manage Voters</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/results" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">View Results</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-white shadow-sm border-b p-4 flex items-center justify-between">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800">Manage Elections</h1>
+            <div class="w-6"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Manage Elections</h1>
+                    <p class="text-gray-600 mt-1">Create, edit, and manage all elections</p>
+                </div>
+                <a href="/admin/elections/new" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i class="fas fa-plus mr-2"></i>
+                    Create New Election
+                </a>
+            </div>
+        </div>
+
+        <!-- Elections List -->
+        <div class="p-6">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div th:if="${elections.empty}" class="text-center py-16">
+                    <div class="text-gray-400 mb-4">
+                        <i class="fas fa-vote-yea text-6xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No Elections Found</h3>
+                    <p class="text-gray-500 mb-6">Create your first election to get started</p>
+                    <a href="/admin/elections/new" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create Election
+                    </a>
+                </div>
+
+                <div th:unless="${elections.empty}">
+                    <!-- Table Header -->
+                    <div class="bg-gray-50 px-6 py-4 border-b">
+                        <div class="grid grid-cols-12 gap-4 text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                            <div class="col-span-3">Election Details</div>
+                            <div class="col-span-2">Duration</div>
+                            <div class="col-span-2">Status</div>
+                            <div class="col-span-2">Candidates</div>
+                            <div class="col-span-1">Votes</div>
+                            <div class="col-span-2">Actions</div>
+                        </div>
+                    </div>
+
+                    <!-- Elections List -->
+                    <div class="divide-y divide-gray-200">
+                        <div th:each="election : ${elections}" class="px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
+                            <div class="grid grid-cols-12 gap-4 items-center">
+                                <!-- Election Details -->
+                                <div class="col-span-3">
+                                    <h3 class="font-semibold text-gray-900" th:text="${election.name}">Election Title</h3>
+                                    <p class="text-sm text-gray-600 mt-1" th:text="${election.description}">Election Description</p>
+                                </div>
+
+                                <!-- Duration -->
+                                <div class="col-span-2">
+                                    <div class="text-sm">
+                                        <div class="flex items-center text-green-600 mb-1">
+                                            <i class="fas fa-play-circle mr-1"></i>
+                                            <span th:text="${#temporals.format(election.startTime, 'MMM dd, yyyy HH:mm')}">Start Time</span>
+                                        </div>
+                                        <div class="flex items-center text-red-600">
+                                            <i class="fas fa-stop-circle mr-1"></i>
+                                            <span th:text="${#temporals.format(election.endTime, 'MMM dd, yyyy HH:mm')}">End Time</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="col-span-2">
+                                    <div th:if="${election.endTime.isBefore(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Completed
+                                    </div>
+                                    <div th:if="${election.startTime.isAfter(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Upcoming
+                                    </div>
+                                    <div th:if="${election.startTime.isBefore(T(java.time.LocalDateTime).now()) && election.endTime.isAfter(T(java.time.LocalDateTime).now())}" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-play mr-1"></i>
+                                        Active
+                                    </div>
+                                </div>
+
+                                <!-- Candidates Count -->
+                                <div class="col-span-2">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-users text-gray-400 mr-2"></i>
+                                        <span class="text-sm font-medium" th:text="${election.candidates.size()} + ' candidates'">0 candidates</span>
+                                    </div>
+                                </div>
+
+                                <!-- Votes Count -->
+                                <div class="col-span-1">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-vote-yea text-gray-400 mr-2"></i>
+                                        <span class="text-sm font-medium">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="col-span-2">
+                                    <div class="flex items-center space-x-2">
+                                        <a th:href="@{/admin/elections/{id}(id=${election.id})}" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            View
+                                        </a>
+                                        <a th:href="@{/admin/elections/{id}/edit(id=${election.id})}" class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors duration-200 text-sm">
+                                            <i class="fas fa-edit mr-1"></i>
+                                            Edit
+                                        </a>
+                                        <form th:action="@{/admin/elections/{id}/delete(id=${election.id})}" method="post" class="inline" th:onsubmit="return confirmDelete([[${election.name}]])">
+                                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm">
+                                                <i class="fas fa-trash mr-1"></i>
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
