@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${'Results: ' + election.name + ' - Admin Panel'}">Election Results - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Initialize results chart
+        document.addEventListener('DOMContentLoaded', function() {
+            createResultsChart();
+        });
+
+        function createResultsChart() {
+            const ctx = document.getElementById('resultsChart');
+            if (!ctx) return;
+
+            const candidateNames = [];
+            const voteCounts = [];
+            const backgroundColors = [];
+            
+            document.querySelectorAll('.candidate-result').forEach((row, index) => {
+                const name = row.querySelector('.candidate-name').textContent;
+                const votes = parseInt(row.querySelector('.vote-count').textContent);
+                candidateNames.push(name);
+                voteCounts.push(votes);
+                
+                // Generate colors for each candidate
+                const colors = [
+                    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+                    '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
+                ];
+                backgroundColors.push(colors[index % colors.length]);
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: candidateNames,
+                    datasets: [{
+                        label: 'Votes',
+                        data: voteCounts,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function printResults() {
+            window.print();
+        }
+
+        function exportResults() {
+            // This would typically generate a CSV or PDF export
+            alert('Export functionality would be implemented here');
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden no-print" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl no-print">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-center p-6 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Admin Panel</h2>
+                    <p class="text-xs text-indigo-300">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Profile Section -->
+        <div class="p-4 border-b border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm" sec:authentication="principal.fullName">Admin User</p>
+                    <p class="text-xs text-indigo-300" sec:authentication="name">admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="/admin" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-chart-pie text-lg"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/elections" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-vote-yea text-lg"></i>
+                        <span class="font-medium">Manage Elections</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/candidates" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-users text-lg"></i>
+                        <span class="font-medium">Manage Candidates</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/voters" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-user-friends text-lg"></i>
+                        <span class="font-medium">Manage Voters</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/results" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-colors duration-200">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                        <span class="font-medium">View Results</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-white shadow-sm border-b p-4 flex items-center justify-between no-print">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800">Election Results</h1>
+            <div class="w-6"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <a href="/admin/results" class="text-indigo-600 hover:text-indigo-800 no-print">
+                            <i class="fas fa-arrow-left text-lg"></i>
+                        </a>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900" th:text="${election.name}">Election Name</h1>
+                            <p class="text-gray-600 mt-1">Detailed election results and statistics</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 no-print">
+                    <button onclick="printResults()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-print"></i>
+                        <span>Print</span>
+                    </button>
+                    <button onclick="exportResults()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Header -->
+        <div class="print-only bg-white p-6 border-b">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-gray-900" th:text="${election.name}">Election Name</h1>
+                <p class="text-gray-600 mt-2">Election Results Report</p>
+                <p class="text-sm text-gray-500 mt-1" th:text="${'Generated on ' + #temporals.format(#temporals.createNow(), 'MMM dd, yyyy HH:mm')}">Generated on Date</p>
+            </div>
+        </div>
+
+        <!-- Election Summary -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Votes -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Total Votes</p>
+                            <p class="text-3xl font-bold text-blue-600" th:text="${electionResult.totalVotes}">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-vote-yea text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Candidates -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Candidates</p>
+                            <p class="text-3xl font-bold text-green-600" th:text="${electionResult.totalCandidates}">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eligible Voters -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Eligible Voters</p>
+                            <p class="text-3xl font-bold text-yellow-600" th:text="${electionResult.totalEligibleVoters}">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-friends text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participation Rate -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Participation</p>
+                            <p class="text-3xl font-bold text-purple-600" th:text="${#numbers.formatDecimal(electionResult.participationRate, 1, 1) + '%'}">0%</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-chart-pie text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Winner Announcement -->
+            <div th:if="${electionResult.winner != null}" class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg p-8 mb-8">
+                <div class="text-center text-white">
+                    <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-crown text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Election Winner</h2>
+                    <h3 class="text-3xl font-bold mb-2" th:text="${electionResult.winner.name}">Winner Name</h3>
+                    <p class="text-xl opacity-90" th:text="${electionResult.winner.party}">Party Name</p>
+                    <p class="text-lg opacity-80 mt-2" th:text="${electionResult.winner.position}">Position</p>
+                </div>
+            </div>
+
+            <!-- Results Chart and Table -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Chart -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Vote Distribution</h3>
+                    <div class="relative h-80">
+                        <canvas id="resultsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Candidates -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Candidate Rankings</h3>
+                    <div class="space-y-4">
+                        <div th:each="candidate, iterStat : ${candidateResults}" 
+                             th:if="${iterStat.index < 5}"
+                             class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                                     th:classappend="${candidate.winner} ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-gray-400'">
+                                    <span th:if="${candidate.winner}"><i class="fas fa-crown"></i></span>
+                                    <span th:unless="${candidate.winner}" th:text="${iterStat.index + 1}">1</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900" th:text="${candidate.candidateName}">Candidate</p>
+                                    <p class="text-sm text-gray-500" th:text="${candidate.party}">Party</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-900" th:text="${candidate.voteCount}">0</p>
+                                <p class="text-sm text-gray-500" th:text="${#numbers.formatDecimal(candidate.percentage, 1, 1) + '%'}">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Results Table -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                    <h2 class="text-xl font-semibold text-white flex items-center">
+                        <i class="fas fa-table mr-3"></i>
+                        Detailed Results
+                    </h2>
+                </div>
+
+                <div th:if="${#lists.isEmpty(candidateResults)}" class="text-center py-16">
+                    <i class="fas fa-vote-yea text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">No Votes Cast</h3>
+                    <p class="text-gray-400">No votes have been recorded for this election yet.</p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(candidateResults)}" class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Party</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Votes</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr th:each="candidate, iterStat : ${candidateResults}" 
+                                class="candidate-result hover:bg-gray-50 transition-colors duration-200"
+                                th:classappend="${candidate.winner} ? 'bg-yellow-50' : ''">
+                                <!-- Rank -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                                             th:classappend="${candidate.winner} ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-gray-400'">
+                                            <span th:if="${candidate.winner}"><i class="fas fa-crown"></i></span>
+                                            <span th:unless="${candidate.winner}" th:text="${iterStat.index + 1}">1</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Candidate -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 candidate-name" th:text="${candidate.candidateName}">Candidate</div>
+                                </td>
+                                
+                                <!-- Party -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500" th:text="${candidate.party ?: 'Independent'}">Party</div>
+                                </td>
+                                
+                                <!-- Position -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500" th:text="${candidate.position ?: 'N/A'}">Position</div>
+                                </td>
+                                
+                                <!-- Votes -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-bold text-gray-900 vote-count" th:text="${candidate.voteCount}">0</div>
+                                </td>
+                                
+                                <!-- Percentage -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-900" th:text="${#numbers.formatDecimal(candidate.percentage, 1, 1) + '%'}">0%</div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                                                     th:style="'width: ' + ${candidate.percentage} + '%'"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Status -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span th:if="${candidate.winner}" 
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-crown mr-1"></i>
+                                        Winner
+                                    </span>
+                                    <span th:unless="${candidate.winner}" 
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Candidate
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

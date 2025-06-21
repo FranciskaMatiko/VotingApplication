@@ -7,6 +7,7 @@ import com.udom.votingapplication.models.Election;
 import com.udom.votingapplication.repositories.VoteRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -35,5 +36,17 @@ public class VoteService {
 
     public long countVotesForCandidate(Long candidateId) {
         return voteRepository.countByCandidateId(candidateId);
+    }
+    
+    public long countVotesForElection(Long electionId) {
+        return voteRepository.countByElectionId(electionId);
+    }
+    
+    public List<Vote> getVotesForElection(Long electionId) {
+        return voteRepository.findByElectionId(electionId);
+    }
+    
+    public List<Object[]> getVoteCountsByElection(Long electionId) {
+        return voteRepository.getVoteCountsByElection(electionId);
     }
 }

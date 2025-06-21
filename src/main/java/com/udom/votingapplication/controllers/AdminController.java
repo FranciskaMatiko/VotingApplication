@@ -17,13 +17,15 @@ public class AdminController {
     private final CandidateService candidateService;
     private final VoteService voteService;
     private final VoterService voterService;
+    private final ResultService resultService;
 
-    public AdminController(ElectionService electionService, CandidateService candidateService, 
-                          VoteService voteService, VoterService voterService) {
+    public AdminController(ElectionService electionService, CandidateService candidateService,
+                          VoteService voteService, VoterService voterService, ResultService resultService) {
         this.electionService = electionService;
         this.candidateService = candidateService;
         this.voteService = voteService;
         this.voterService = voterService;
+        this.resultService = resultService;
     }
 
     // Admin dashboard
@@ -272,9 +274,25 @@ public class AdminController {
     // View Results
     @GetMapping("/results")
     public String viewResults(Model model) {
-        List<Election> elections = electionService.getAllElections();
-        model.addAttribute("elections", elections);
+        List<ElectionResult> electionResults = resultService.getAllElectionResults();
+        model.addAttribute("electionResults", electionResults);
         return "admin/results";
+    }
+    
+    // View detailed results for a specific election
+    @GetMapping("/results/{electionId}")
+    public String viewElectionResults(@PathVariable Long electionId, Model model) {
+        Election election = electionService.getElection(electionId)
+            .orElseThrow(() -> new RuntimeException("Election not found"));
+        
+        ElectionResult electionResult = resultService.getElectionResult(election);
+        List<CandidateResult> candidateResults = resultService.getCandidateResults(electionId);
+        
+        model.addAttribute("election", election);
+        model.addAttribute("electionResult", electionResult);
+        model.addAttribute("candidateResults", candidateResults);
+        
+        return "admin/election-results";
     }
 
     // View candidates for a specific election
