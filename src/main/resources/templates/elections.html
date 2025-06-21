@@ -12,6 +12,31 @@
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         }
+
+        function filterElections(status) {
+            const allCards = document.querySelectorAll('.election-card');
+            const tabs = document.querySelectorAll('.filter-tab');
+            
+            // Remove active state from all tabs
+            tabs.forEach(tab => {
+                tab.classList.remove('border-indigo-500', 'text-indigo-600');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Add active state to clicked tab
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+            event.target.classList.add('border-indigo-500', 'text-indigo-600');
+            
+            // Show/hide cards based on status
+            allCards.forEach(card => {
+                const cardStatus = card.getAttribute('data-status');
+                if (status === 'all' || cardStatus === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -65,12 +90,6 @@
                     <a href="/voter/elections" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-700 text-white transition-all duration-200">
                         <i class="fas fa-calendar-check text-lg"></i>
                         <span class="font-medium">Elections</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/voter/vote" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition-all duration-200">
-                        <i class="fas fa-check-circle text-lg"></i>
-                        <span class="font-medium">Cast Vote</span>
                     </a>
                 </li>
                 <li>
@@ -143,20 +162,42 @@
                 </div>
             </div>
 
+            <!-- Error Messages -->
+            <div th:if="${param.error}" class="mb-6">
+                <div th:if="${param.error[0] == 'notFound'}" class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle text-red-600 mr-3"></i>
+                        <div>
+                            <h4 class="font-medium text-red-900">Election Not Found</h4>
+                            <p class="text-red-700 text-sm">The requested election could not be found or may have been removed.</p>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${param.error[0] == 'loadFailed'}" class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 mr-3"></i>
+                        <div>
+                            <h4 class="font-medium text-red-900">Unable to Load Election Details</h4>
+                            <p class="text-red-700 text-sm">There was an error loading the election details. Please try again later.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Filter Tabs -->
             <div class="mb-6">
                 <div class="border-b border-gray-200">
                     <nav class="-mb-px flex space-x-8">
-                        <a href="#" class="border-indigo-500 text-indigo-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <a href="#" onclick="filterElections('all')" class="filter-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
                             All Elections
                         </a>
-                        <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <a href="#" onclick="filterElections('active')" class="filter-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
                             Active
                         </a>
-                        <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <a href="#" onclick="filterElections('upcoming')" class="filter-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
                             Upcoming
                         </a>
-                        <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <a href="#" onclick="filterElections('completed')" class="filter-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
                             Completed
                         </a>
                     </nav>
@@ -166,7 +207,9 @@
             <!-- Elections Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 <!-- Election Card Template -->
-                <div th:each="election : ${elections}" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300">
+                <div th:each="election : ${elections}" 
+                     th:attr="data-status=${election.status}"
+                     class="election-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300">
                     <!-- Election Header -->
                     <div class="relative">
                         <div class="absolute top-4 right-4 z-10">
@@ -298,23 +341,23 @@
                             </div>
                             
                             <!-- Secondary Actions -->
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-wrap gap-2">
                                 <a th:href="@{/voter/elections/{id}/candidates(id=${election.id})}" 
-                                   class="bg-gray-100 text-gray-700 text-center py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium">
+                                   class="flex-1 min-w-0 bg-gray-100 text-gray-700 text-center py-2 px-3 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium">
                                     <i class="fas fa-users mr-1"></i>
                                     Candidates
                                 </a>
                                 
                                 <a th:if="${election.status == 'completed' && election.resultsVisible}" 
                                    th:href="@{/voter/elections/{id}/results(id=${election.id})}" 
-                                   class="bg-gray-100 text-gray-700 text-center py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium">
+                                   class="flex-1 min-w-0 bg-gray-100 text-gray-700 text-center py-2 px-3 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium">
                                     <i class="fas fa-chart-bar mr-1"></i>
                                     Results
                                 </a>
                                 
-                                <a th:if="${election.status != 'completed' || !election.resultsVisible}" 
-                                   th:href="@{/voter/elections/{id}(id=${election.id})}" 
-                                   class="bg-blue-100 text-blue-700 text-center py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm font-medium">
+                                <!-- Always show Details button -->
+                                <a th:href="@{/voter/elections/{id}(id=${election.id})}" 
+                                   class="flex-1 min-w-0 bg-blue-100 text-blue-700 text-center py-2 px-3 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm font-medium">
                                     <i class="fas fa-info-circle mr-1"></i>
                                     Details
                                 </a>

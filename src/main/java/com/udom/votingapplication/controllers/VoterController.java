@@ -282,4 +282,31 @@ public class VoterController {
     public String help() {
         return "voter-help";
     }
+
+    // View election details
+    @GetMapping("/elections/{electionId}")
+    public String electionDetails(@PathVariable Long electionId, Model model, @AuthenticationPrincipal Voter voter) {
+        try {
+            Election election = electionService.getElection(electionId).orElse(null);
+            
+            if (election == null) {
+                return "redirect:/voter/elections?error=notFound";
+            }
+            
+            election.calculateStatus();
+            boolean hasVoted = voteService.hasVoted(voter.getId(), electionId);
+            election.setVoterHasVoted(hasVoted);
+            
+            List<Candidate> candidates = candidateService.getCandidatesByElection(electionId);
+            
+            model.addAttribute("election", election);
+            model.addAttribute("candidates", candidates);
+            model.addAttribute("hasVoted", hasVoted);
+            
+            return "election-details";
+        } catch (Exception e) {
+            e.printStackTrace(); // For debugging
+            return "redirect:/voter/elections?error=loadFailed";
+        }
+    }
 }
