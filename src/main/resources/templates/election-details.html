@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title th:text="'Election Details - ' + ${election.name} + ' - Voting System'">Election Details - Voting System</title>
+    <title th:text="${election != null ? 'Election Details - ' + election.name + ' - Voting System' : 'Election Details - Voting System'}">Election Details - Voting System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
@@ -299,8 +299,8 @@
                                 <p th:if="${candidate.position}" class="text-sm text-gray-500" th:text="'Running for: ' + ${candidate.position}">Running for: President</p>
                             </div>
                         </div>
-                        <div th:if="${candidate.description}" class="mt-4 ml-20">
-                            <p class="text-gray-600" th:text="${candidate.description}">Candidate description...</p>
+                        <div th:if="${candidate.profile}" class="mt-4 ml-20">
+                            <p class="text-gray-600" th:text="${candidate.profile}">Candidate description...</p>
                         </div>
                     </div>
                 </div>

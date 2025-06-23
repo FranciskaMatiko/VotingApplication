@@ -436,24 +436,33 @@ public class VoterController {
     @GetMapping("/elections/{electionId}")
     public String electionDetails(@PathVariable Long electionId, Model model, @AuthenticationPrincipal Voter voter) {
         try {
+            System.out.println("Loading election details for ID: " + electionId);
+            
             Election election = electionService.getElection(electionId).orElse(null);
             
             if (election == null) {
+                System.out.println("Election not found with ID: " + electionId);
                 return "redirect:/voter/elections?error=notFound";
             }
             
+            System.out.println("Found election: " + election.getName());
             election.calculateStatus();
+            
             boolean hasVoted = voteService.hasVoted(voter.getId(), electionId);
+            System.out.println("Voter has voted: " + hasVoted);
             election.setVoterHasVoted(hasVoted);
             
             List<Candidate> candidates = candidateService.getCandidatesByElection(electionId);
+            System.out.println("Found " + candidates.size() + " candidates");
             
             model.addAttribute("election", election);
             model.addAttribute("candidates", candidates);
             model.addAttribute("hasVoted", hasVoted);
             
+            System.out.println("Returning election-details template");
             return "election-details";
         } catch (Exception e) {
+            System.out.println("Error loading election details: " + e.getMessage());
             e.printStackTrace(); // For debugging
             return "redirect:/voter/elections?error=loadFailed";
         }
