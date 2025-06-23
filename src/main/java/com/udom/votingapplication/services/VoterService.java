@@ -94,8 +94,7 @@ public class VoterService implements UserDetailsService {
         
         Voter voter = voterOpt.get();
         voter.setFullName(fullName);
-        // Note: Email update might need additional validation in a real app
-        // You might want to send a verification email before updating
+        voter.setEmail(email);
         repo.save(voter);
         return true;
     }

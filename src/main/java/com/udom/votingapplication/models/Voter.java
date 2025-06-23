@@ -19,6 +19,8 @@ public class Voter implements UserDetails {
     private String password;
 
     private String fullName;
+    
+    private String email;
 
     private boolean enabled = true;
 
@@ -43,6 +45,9 @@ public class Voter implements UserDetails {
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
+    
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
