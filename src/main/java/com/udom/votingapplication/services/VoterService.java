@@ -1,6 +1,7 @@
 package com.udom.votingapplication.services;
 
 import com.udom.votingapplication.models.Voter;
+import com.udom.votingapplication.models.VotingStatistics;
 import com.udom.votingapplication.repositories.VoterRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,10 +14,14 @@ public class VoterService implements UserDetailsService {
 
     private final VoterRepository repo;
     private final PasswordEncoder encoder;
+    private final VoteService voteService;
+    private final ElectionService electionService;
 
-    public VoterService(VoterRepository repo, PasswordEncoder encoder) {
+    public VoterService(VoterRepository repo, PasswordEncoder encoder, VoteService voteService, ElectionService electionService) {
         this.repo = repo;
         this.encoder = encoder;
+        this.voteService = voteService;
+        this.electionService = electionService;
     }
 
     public Voter register(Voter voter) {
@@ -120,5 +125,28 @@ public class VoterService implements UserDetailsService {
         // repo.save(voter);
         
         return true;
+    }
+    
+    public VotingStatistics getVotingStatistics(Long voterId) {
+        // Get total votes cast by this voter
+        long totalVotesCast = voteService.countVotesByVoter(voterId);
+        
+        // Get number of elections this voter participated in
+        long electionsParticipated = voteService.countElectionsParticipatedByVoter(voterId);
+        
+        // Get total number of elections available (completed or active ones where voting was possible)
+        List<com.udom.votingapplication.models.Election> allElections = electionService.getAllElections();
+        long totalAvailableElections = allElections.stream()
+            .filter(election -> {
+                election.calculateStatus();
+                return "active".equals(election.getStatus()) || "completed".equals(election.getStatus());
+            })
+            .count();
+        
+        // Calculate participation rate
+        double participationRate = totalAvailableElections > 0 ? 
+            (double) electionsParticipated / totalAvailableElections * 100 : 0;
+        
+        return new VotingStatistics(totalVotesCast, electionsParticipated, participationRate);
     }
 }

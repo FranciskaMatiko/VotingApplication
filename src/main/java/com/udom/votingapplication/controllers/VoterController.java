@@ -260,6 +260,11 @@ public class VoterController {
     @GetMapping("/profile")
     public String profile(Model model, @AuthenticationPrincipal Voter voter) {
         model.addAttribute("voter", voter);
+        
+        // Calculate and add real-time voting statistics
+        com.udom.votingapplication.models.VotingStatistics stats = voterService.getVotingStatistics(voter.getId());
+        model.addAttribute("votingStats", stats);
+        
         return "voter-profile";
     }
 

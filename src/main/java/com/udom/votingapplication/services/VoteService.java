@@ -49,4 +49,17 @@ public class VoteService {
     public List<Object[]> getVoteCountsByElection(Long electionId) {
         return voteRepository.getVoteCountsByElection(electionId);
     }
+    
+    // New methods for voter statistics
+    public long countVotesByVoter(Long voterId) {
+        return voteRepository.countByVoterId(voterId);
+    }
+    
+    public long countElectionsParticipatedByVoter(Long voterId) {
+        return voteRepository.countDistinctElectionsByVoterId(voterId);
+    }
+    
+    public List<Vote> getVotesByVoter(Long voterId) {
+        return voteRepository.findByVoterId(voterId);
+    }
 }
